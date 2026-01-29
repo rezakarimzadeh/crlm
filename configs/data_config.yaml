@@ -1,0 +1,4 @@
+raw_images_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/raw_data/CRLM/images
+raw_segmentations_ai_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/raw_data/CRLM/segmentations_ai
+
+preprocessed_data_base_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM

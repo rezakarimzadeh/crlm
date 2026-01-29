@@ -1,0 +1,3185 @@
+[
+    {
+        "patient_id": "CAESAR389",
+        "base_img": "CAESAR389_0_0000.nii",
+        "follow_ups": [
+            "CAESAR389_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR038",
+        "base_img": "CAESAR038_0_0000.nii",
+        "follow_ups": [
+            "CAESAR038_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR298",
+        "base_img": "CAESAR298_0_0000.nii",
+        "follow_ups": [
+            "CAESAR298_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR451",
+        "base_img": "CAESAR451_0_0000.nii",
+        "follow_ups": [
+            "CAESAR451_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR453",
+        "base_img": "CAESAR453_0_0000.nii",
+        "follow_ups": [
+            "CAESAR453_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR496",
+        "base_img": "CAESAR496_0_0000.nii",
+        "follow_ups": [
+            "CAESAR496_1_0000.nii",
+            "CAESAR496_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR226",
+        "base_img": "CAESAR226_0_0000.nii",
+        "follow_ups": [
+            "CAESAR226_1_0000.nii",
+            "CAESAR226_2_0000.nii",
+            "CAESAR226_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR112",
+        "base_img": "CAESAR112_0_0000.nii",
+        "follow_ups": [
+            "CAESAR112_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR013",
+        "base_img": "CAESAR013_0_0000.nii",
+        "follow_ups": [
+            "CAESAR013_1_0000.nii",
+            "CAESAR013_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR411",
+        "base_img": "CAESAR411_0_0000.nii",
+        "follow_ups": [
+            "CAESAR411_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR522",
+        "base_img": "CAESAR522_0_0000.nii",
+        "follow_ups": [
+            "CAESAR522_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR502",
+        "base_img": "CAESAR502_0_0000.nii",
+        "follow_ups": [
+            "CAESAR502_1_0000.nii",
+            "CAESAR502_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR419",
+        "base_img": "CAESAR419_0_0000.nii",
+        "follow_ups": [
+            "CAESAR419_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR021",
+        "base_img": "CAESAR021_0_0000.nii",
+        "follow_ups": [
+            "CAESAR021_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR058",
+        "base_img": "CAESAR058_0_0000.nii",
+        "follow_ups": [
+            "CAESAR058_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR041",
+        "base_img": "CAESAR041_0_0000.nii",
+        "follow_ups": [
+            "CAESAR041_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR340",
+        "base_img": "CAESAR340_0_0000.nii",
+        "follow_ups": [
+            "CAESAR340_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR001",
+        "base_img": "CAESAR001_0_0000.nii",
+        "follow_ups": [
+            "CAESAR001_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR089",
+        "base_img": "CAESAR089_0_0000.nii",
+        "follow_ups": [
+            "CAESAR089_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR567",
+        "base_img": "CAESAR567_0_0000.nii",
+        "follow_ups": [
+            "CAESAR567_1_0000.nii",
+            "CAESAR567_2_0000.nii",
+            "CAESAR567_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR223",
+        "base_img": "CAESAR223_0_0000.nii",
+        "follow_ups": [
+            "CAESAR223_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR300",
+        "base_img": "CAESAR300_0_0000.nii",
+        "follow_ups": [
+            "CAESAR300_1_0000.nii",
+            "CAESAR300_2_0000.nii",
+            "CAESAR300_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR341",
+        "base_img": "CAESAR341_0_0000.nii",
+        "follow_ups": [
+            "CAESAR341_1_0000.nii",
+            "CAESAR341_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR448",
+        "base_img": "CAESAR448_0_0000.nii",
+        "follow_ups": [
+            "CAESAR448_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR117",
+        "base_img": "CAESAR117_0_0000.nii",
+        "follow_ups": [
+            "CAESAR117_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR215",
+        "base_img": "CAESAR215_0_0000.nii",
+        "follow_ups": [
+            "CAESAR215_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR398",
+        "base_img": "CAESAR398_0_0000.nii",
+        "follow_ups": [
+            "CAESAR398_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR231",
+        "base_img": "CAESAR231_0_0000.nii",
+        "follow_ups": [
+            "CAESAR231_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR583",
+        "base_img": "CAESAR583_0_0000.nii",
+        "follow_ups": [
+            "CAESAR583_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR358",
+        "base_img": "CAESAR358_0_0000.nii",
+        "follow_ups": [
+            "CAESAR358_1_0000.nii",
+            "CAESAR358_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR063",
+        "base_img": "CAESAR063_0_0000.nii",
+        "follow_ups": [
+            "CAESAR063_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR121",
+        "base_img": "CAESAR121_0_0000.nii",
+        "follow_ups": [
+            "CAESAR121_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR422",
+        "base_img": "CAESAR422_0_0000.nii",
+        "follow_ups": [
+            "CAESAR422_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR393",
+        "base_img": "CAESAR393_0_0000.nii",
+        "follow_ups": [
+            "CAESAR393_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR050",
+        "base_img": "CAESAR050_0_0000.nii",
+        "follow_ups": [
+            "CAESAR050_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR514",
+        "base_img": "CAESAR514_0_0000.nii",
+        "follow_ups": [
+            "CAESAR514_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR545",
+        "base_img": "CAESAR545_0_0000.nii",
+        "follow_ups": [
+            "CAESAR545_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR169",
+        "base_img": "CAESAR169_0_0000.nii",
+        "follow_ups": [
+            "CAESAR169_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR033",
+        "base_img": "CAESAR033_0_0000.nii",
+        "follow_ups": [
+            "CAESAR033_1_0000.nii",
+            "CAESAR033_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR221",
+        "base_img": "CAESAR221_0_0000.nii",
+        "follow_ups": [
+            "CAESAR221_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR110",
+        "base_img": "CAESAR110_0_0000.nii",
+        "follow_ups": [
+            "CAESAR110_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR076",
+        "base_img": "CAESAR076_0_0000.nii",
+        "follow_ups": [
+            "CAESAR076_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR339",
+        "base_img": "CAESAR339_0_0000.nii",
+        "follow_ups": [
+            "CAESAR339_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR569",
+        "base_img": "CAESAR569_0_0000.nii",
+        "follow_ups": [
+            "CAESAR569_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR374",
+        "base_img": "CAESAR374_0_0000.nii",
+        "follow_ups": [
+            "CAESAR374_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR360",
+        "base_img": "CAESAR374_0_0000.nii",
+        "follow_ups": [
+            "CAESAR360_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR337",
+        "base_img": "CAESAR337_0_0000.nii",
+        "follow_ups": [
+            "CAESAR337_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR151",
+        "base_img": "CAESAR151_0_0000.nii",
+        "follow_ups": [
+            "CAESAR151_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR189",
+        "base_img": "CAESAR189_0_0000.nii",
+        "follow_ups": [
+            "CAESAR189_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR516",
+        "base_img": "CAESAR516_0_0000.nii",
+        "follow_ups": [
+            "CAESAR516_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR381",
+        "base_img": "CAESAR381_0_0000.nii",
+        "follow_ups": [
+            "CAESAR381_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR143",
+        "base_img": "CAESAR143_0_0000.nii",
+        "follow_ups": [
+            "CAESAR143_1_0000.nii",
+            "CAESAR143_2_0000.nii",
+            "CAESAR143_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR213",
+        "base_img": "CAESAR213_0_0000.nii",
+        "follow_ups": [
+            "CAESAR213_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR205",
+        "base_img": "CAESAR205_0_0000.nii",
+        "follow_ups": [
+            "CAESAR205_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR256",
+        "base_img": "CAESAR256_0_0000.nii",
+        "follow_ups": [
+            "CAESAR256_1_0000.nii",
+            "CAESAR256_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR198",
+        "base_img": "CAESAR198_0_0000.nii",
+        "follow_ups": [
+            "CAESAR198_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR182",
+        "base_img": "CAESAR182_0_0000.nii",
+        "follow_ups": [
+            "CAESAR182_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR272",
+        "base_img": "CAESAR272_0_0000.nii",
+        "follow_ups": [
+            "CAESAR272_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR486",
+        "base_img": "CAESAR486_0_0000.nii",
+        "follow_ups": [
+            "CAESAR486_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR543",
+        "base_img": "CAESAR543_0_0000.nii",
+        "follow_ups": [
+            "CAESAR543_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR474",
+        "base_img": "CAESAR474_0_0000.nii",
+        "follow_ups": [
+            "CAESAR474_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR327",
+        "base_img": "CAESAR327_0_0000.nii",
+        "follow_ups": [
+            "CAESAR327_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR203",
+        "base_img": "CAESAR203_0_0000.nii",
+        "follow_ups": [
+            "CAESAR203_1_0000.nii",
+            "CAESAR203_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR051",
+        "base_img": "CAESAR051_0_0000.nii",
+        "follow_ups": [
+            "CAESAR051_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR550",
+        "base_img": "CAESAR550_0_0000.nii",
+        "follow_ups": [
+            "CAESAR550_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR357",
+        "base_img": "CAESAR357_0_0000.nii",
+        "follow_ups": [
+            "CAESAR357_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR175",
+        "base_img": "CAESAR175_0_0000.nii",
+        "follow_ups": [
+            "CAESAR175_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR538",
+        "base_img": "CAESAR538_0_0000.nii",
+        "follow_ups": [
+            "CAESAR538_1_0000.nii",
+            "CAESAR538_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR370",
+        "base_img": "CAESAR370_0_0000.nii",
+        "follow_ups": [
+            "CAESAR370_1_0000.nii",
+            "CAESAR370_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR498",
+        "base_img": "CAESAR498_0_0000.nii",
+        "follow_ups": [
+            "CAESAR498_1_0000.nii",
+            "CAESAR498_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR133",
+        "base_img": "CAESAR133_0_0000.nii",
+        "follow_ups": [
+            "CAESAR133_1_0000.nii",
+            "CAESAR133_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR331",
+        "base_img": "CAESAR331_0_0000.nii",
+        "follow_ups": [
+            "CAESAR331_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR222",
+        "base_img": "CAESAR222_0_0000.nii",
+        "follow_ups": [
+            "CAESAR222_1_0000.nii",
+            "CAESAR222_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR477",
+        "base_img": "CAESAR477_0_0000.nii",
+        "follow_ups": [
+            "CAESAR477_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR315",
+        "base_img": "CAESAR315_0_0000.nii",
+        "follow_ups": [
+            "CAESAR315_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR330",
+        "base_img": "CAESAR330_0_0000.nii",
+        "follow_ups": [
+            "CAESAR330_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR434",
+        "base_img": "CAESAR434_0_0000.nii",
+        "follow_ups": [
+            "CAESAR434_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR560",
+        "base_img": "CAESAR560_0_0000.nii",
+        "follow_ups": [
+            "CAESAR560_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR513",
+        "base_img": "CAESAR513_0_0000.nii",
+        "follow_ups": [
+            "CAESAR513_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR463",
+        "base_img": "CAESAR463_0_0000.nii",
+        "follow_ups": [
+            "CAESAR463_1_0000.nii",
+            "CAESAR463_2_0000.nii",
+            "CAESAR463_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR044",
+        "base_img": "CAESAR044_0_0000.nii",
+        "follow_ups": [
+            "CAESAR044_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR065",
+        "base_img": "CAESAR065_0_0000.nii",
+        "follow_ups": [
+            "CAESAR065_1_0000.nii",
+            "CAESAR065_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR338",
+        "base_img": "CAESAR338_0_0000.nii",
+        "follow_ups": [
+            "CAESAR338_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR004",
+        "base_img": "CAESAR004_0_0000.nii",
+        "follow_ups": [
+            "CAESAR004_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR565",
+        "base_img": "CAESAR565_0_0000.nii",
+        "follow_ups": [
+            "CAESAR565_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR192",
+        "base_img": "CAESAR192_0_0000.nii",
+        "follow_ups": [
+            "CAESAR192_1_0000.nii",
+            "CAESAR192_4_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR015",
+        "base_img": "CAESAR015_0_0000.nii",
+        "follow_ups": [
+            "CAESAR015_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR238",
+        "base_img": "CAESAR238_0_0000.nii",
+        "follow_ups": [
+            "CAESAR238_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR551",
+        "base_img": "CAESAR551_0_0000.nii",
+        "follow_ups": [
+            "CAESAR551_1_0000.nii",
+            "CAESAR551_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR054",
+        "base_img": "CAESAR054_0_0000.nii",
+        "follow_ups": [
+            "CAESAR054_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR286",
+        "base_img": "CAESAR286_0_0000.nii",
+        "follow_ups": [
+            "CAESAR286_1_0000.nii",
+            "CAESAR286_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR406",
+        "base_img": "CAESAR406_0_0000.nii",
+        "follow_ups": [
+            "CAESAR406_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR499",
+        "base_img": "CAESAR499_0_0000.nii",
+        "follow_ups": [
+            "CAESAR499_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR230",
+        "base_img": "CAESAR230_0_0000.nii",
+        "follow_ups": [
+            "CAESAR230_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR342",
+        "base_img": "CAESAR342_0_0000.nii",
+        "follow_ups": [
+            "CAESAR342_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR067",
+        "base_img": "CAESAR067_0_0000.nii",
+        "follow_ups": [
+            "CAESAR067_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR007",
+        "base_img": "CAESAR007_0_0000.nii",
+        "follow_ups": [
+            "CAESAR007_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR209",
+        "base_img": "CAESAR209_0_0000.nii",
+        "follow_ups": [
+            "CAESAR209_1_0000.nii",
+            "CAESAR209_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR011",
+        "base_img": "CAESAR011_0_0000.nii",
+        "follow_ups": [
+            "CAESAR011_1_0000.nii",
+            "CAESAR011_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR343",
+        "base_img": "CAESAR343_0_0000.nii",
+        "follow_ups": [
+            "CAESAR343_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR369",
+        "base_img": "CAESAR369_0_0000.nii",
+        "follow_ups": [
+            "CAESAR369_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR098",
+        "base_img": "CAESAR098_0_0000.nii",
+        "follow_ups": [
+            "CAESAR098_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR541",
+        "base_img": "CAESAR541_0_0000.nii",
+        "follow_ups": [
+            "CAESAR541_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR344",
+        "base_img": "CAESAR344_0_0000.nii",
+        "follow_ups": [
+            "CAESAR344_1_0000.nii",
+            "CAESAR344_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR420",
+        "base_img": "CAESAR420_0_0000.nii",
+        "follow_ups": [
+            "CAESAR420_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR159",
+        "base_img": "CAESAR159_0_0000.nii",
+        "follow_ups": [
+            "CAESAR159_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR535",
+        "base_img": "CAESAR535_0_0000.nii",
+        "follow_ups": [
+            "CAESAR535_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR282",
+        "base_img": "CAESAR282_0_0000.nii",
+        "follow_ups": [
+            "CAESAR282_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR247",
+        "base_img": "CAESAR247_0_0000.nii",
+        "follow_ups": [
+            "CAESAR247_1_0000.nii",
+            "CAESAR247_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR521",
+        "base_img": "CAESAR521_0_0000.nii",
+        "follow_ups": [
+            "CAESAR521_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR582",
+        "base_img": "CAESAR582_0_0000.nii",
+        "follow_ups": [
+            "CAESAR582_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR379",
+        "base_img": "CAESAR379_0_0000.nii",
+        "follow_ups": [
+            "CAESAR379_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR549",
+        "base_img": "CAESAR549_0_0000.nii",
+        "follow_ups": [
+            "CAESAR549_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR489",
+        "base_img": "CAESAR489_0_0000.nii",
+        "follow_ups": [
+            "CAESAR489_1_0000.nii",
+            "CAESAR489_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR540",
+        "base_img": "CAESAR540_0_0000.nii",
+        "follow_ups": [
+            "CAESAR540_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR447",
+        "base_img": "CAESAR447_0_0000.nii",
+        "follow_ups": [
+            "CAESAR447_1_0000.nii",
+            "CAESAR447_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR252",
+        "base_img": "CAESAR252_0_0000.nii",
+        "follow_ups": [
+            "CAESAR252_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR509",
+        "base_img": "CAESAR509_0_0000.nii",
+        "follow_ups": [
+            "CAESAR509_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR580",
+        "base_img": "CAESAR580_0_0000.nii",
+        "follow_ups": [
+            "CAESAR580_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR376",
+        "base_img": "CAESAR376_0_0000.nii",
+        "follow_ups": [
+            "CAESAR376_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR037",
+        "base_img": "CAESAR037_0_0000.nii",
+        "follow_ups": [
+            "CAESAR037_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR365",
+        "base_img": "CAESAR365_0_0000.nii",
+        "follow_ups": [
+            "CAESAR365_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR292",
+        "base_img": "CAESAR292_0_0000.nii",
+        "follow_ups": [
+            "CAESAR292_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR129",
+        "base_img": "CAESAR129_0_0000.nii",
+        "follow_ups": [
+            "CAESAR129_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR034",
+        "base_img": "CAESAR034_0_0000.nii",
+        "follow_ups": [
+            "CAESAR034_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR524",
+        "base_img": "CAESAR524_0_0000.nii",
+        "follow_ups": [
+            "CAESAR524_1_0000.nii",
+            "CAESAR524_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR429",
+        "base_img": "CAESAR429_0_0000.nii",
+        "follow_ups": [
+            "CAESAR429_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR533",
+        "base_img": "CAESAR533_0_0000.nii",
+        "follow_ups": [
+            "CAESAR533_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR456",
+        "base_img": "CAESAR456_0_0000.nii",
+        "follow_ups": [
+            "CAESAR456_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR424",
+        "base_img": "CAESAR424_0_0000.nii",
+        "follow_ups": [
+            "CAESAR424_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR211",
+        "base_img": "CAESAR211_0_0000.nii",
+        "follow_ups": [
+            "CAESAR211_1_0000.nii",
+            "CAESAR211_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR552",
+        "base_img": "CAESAR552_0_0000.nii",
+        "follow_ups": [
+            "CAESAR552_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR148",
+        "base_img": "CAESAR148_0_0000.nii",
+        "follow_ups": [
+            "CAESAR148_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR075",
+        "base_img": "CAESAR075_0_0000.nii",
+        "follow_ups": [
+            "CAESAR075_1_0000.nii",
+            "CAESAR075_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR111",
+        "base_img": "CAESAR111_0_0000.nii",
+        "follow_ups": [
+            "CAESAR111_1_0000.nii",
+            "CAESAR111_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR093",
+        "base_img": "CAESAR093_0_0000.nii",
+        "follow_ups": [
+            "CAESAR093_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR057",
+        "base_img": "CAESAR057_0_0000.nii",
+        "follow_ups": [
+            "CAESAR057_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR017",
+        "base_img": "CAESAR017_0_0000.nii",
+        "follow_ups": [
+            "CAESAR017_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR055",
+        "base_img": "CAESAR055_0_0000.nii",
+        "follow_ups": [
+            "CAESAR055_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR273",
+        "base_img": "CAESAR273_0_0000.nii",
+        "follow_ups": [
+            "CAESAR273_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR101",
+        "base_img": "CAESAR101_0_0000.nii",
+        "follow_ups": [
+            "CAESAR101_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR435",
+        "base_img": "CAESAR435_0_0000.nii",
+        "follow_ups": [
+            "CAESAR435_1_0000.nii",
+            "CAESAR435_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR085",
+        "base_img": "CAESAR085_0_0000.nii",
+        "follow_ups": [
+            "CAESAR085_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR130",
+        "base_img": "CAESAR130_0_0000.nii",
+        "follow_ups": [
+            "CAESAR130_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR046",
+        "base_img": "CAESAR046_0_0000.nii",
+        "follow_ups": [
+            "CAESAR046_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR224",
+        "base_img": "CAESAR224_0_0000.nii",
+        "follow_ups": [
+            "CAESAR224_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR029",
+        "base_img": "CAESAR029_0_0000.nii",
+        "follow_ups": [
+            "CAESAR029_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR359",
+        "base_img": "CAESAR359_0_0000.nii",
+        "follow_ups": [
+            "CAESAR359_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR208",
+        "base_img": "CAESAR208_0_0000.nii",
+        "follow_ups": [
+            "CAESAR208_1_0000.nii",
+            "CAESAR208_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR473",
+        "base_img": "CAESAR473_0_0000.nii",
+        "follow_ups": [
+            "CAESAR473_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR415",
+        "base_img": "CAESAR415_0_0000.nii",
+        "follow_ups": [
+            "CAESAR415_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR492",
+        "base_img": "CAESAR492_0_0000.nii",
+        "follow_ups": [
+            "CAESAR492_1_0000.nii",
+            "CAESAR492_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR472",
+        "base_img": "CAESAR472_0_0000.nii",
+        "follow_ups": [
+            "CAESAR472_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR584",
+        "base_img": "CAESAR584_0_0000.nii",
+        "follow_ups": [
+            "CAESAR584_1_0000.nii",
+            "CAESAR584_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR355",
+        "base_img": "CAESAR355_0_0000.nii",
+        "follow_ups": [
+            "CAESAR355_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR391",
+        "base_img": "CAESAR391_0_0000.nii",
+        "follow_ups": [
+            "CAESAR391_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR487",
+        "base_img": "CAESAR487_0_0000.nii",
+        "follow_ups": [
+            "CAESAR487_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR418",
+        "base_img": "CAESAR418_0_0000.nii",
+        "follow_ups": [
+            "CAESAR418_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR137",
+        "base_img": "CAESAR137_0_0000.nii",
+        "follow_ups": [
+            "CAESAR137_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR132",
+        "base_img": "CAESAR132_0_0000.nii",
+        "follow_ups": [
+            "CAESAR132_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR194",
+        "base_img": "CAESAR194_0_0000.nii",
+        "follow_ups": [
+            "CAESAR194_1_0000.nii",
+            "CAESAR194_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR515",
+        "base_img": "CAESAR515_0_0000.nii",
+        "follow_ups": [
+            "CAESAR515_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR225",
+        "base_img": "CAESAR225_0_0000.nii",
+        "follow_ups": [
+            "CAESAR225_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR032",
+        "base_img": "CAESAR032_0_0000.nii",
+        "follow_ups": [
+            "CAESAR032_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR353",
+        "base_img": "CAESAR353_0_0000.nii",
+        "follow_ups": [
+            "CAESAR353_1_0000.nii",
+            "CAESAR353_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR068",
+        "base_img": "CAESAR068_0_0000.nii",
+        "follow_ups": [
+            "CAESAR068_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR126",
+        "base_img": "CAESAR126_0_0000.nii",
+        "follow_ups": [
+            "CAESAR126_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR172",
+        "base_img": "CAESAR172_0_0000.nii",
+        "follow_ups": [
+            "CAESAR172_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR104",
+        "base_img": "CAESAR104_0_0000.nii",
+        "follow_ups": [
+            "CAESAR104_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR297",
+        "base_img": "CAESAR297_0_0000.nii",
+        "follow_ups": [
+            "CAESAR297_1_0000.nii",
+            "CAESAR297_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR438",
+        "base_img": "CAESAR438_0_0000.nii",
+        "follow_ups": [
+            "CAESAR438_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR186",
+        "base_img": "CAESAR186_0_0000.nii",
+        "follow_ups": [
+            "CAESAR186_1_0000.nii",
+            "CAESAR186_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR426",
+        "base_img": "CAESAR426_0_0000.nii",
+        "follow_ups": [
+            "CAESAR426_1_0000.nii",
+            "CAESAR426_2_0000.nii",
+            "CAESAR426_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR255",
+        "base_img": "CAESAR255_0_0000.nii",
+        "follow_ups": [
+            "CAESAR255_1_0000.nii",
+            "CAESAR255_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR507",
+        "base_img": "CAESAR507_0_0000.nii",
+        "follow_ups": [
+            "CAESAR507_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR412",
+        "base_img": "CAESAR412_0_0000.nii",
+        "follow_ups": [
+            "CAESAR412_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR107",
+        "base_img": "CAESAR107_0_0000.nii",
+        "follow_ups": [
+            "CAESAR107_1_0000.nii",
+            "CAESAR107_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR283",
+        "base_img": "CAESAR283_0_0000.nii",
+        "follow_ups": [
+            "CAESAR283_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR157",
+        "base_img": "CAESAR157_0_0000.nii",
+        "follow_ups": [
+            "CAESAR157_1_0000.nii",
+            "CAESAR157_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR392",
+        "base_img": "CAESAR392_0_0000.nii",
+        "follow_ups": [
+            "CAESAR392_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR479",
+        "base_img": "CAESAR479_0_0000.nii",
+        "follow_ups": [
+            "CAESAR479_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR248",
+        "base_img": "CAESAR248_0_0000.nii",
+        "follow_ups": [
+            "CAESAR248_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR264",
+        "base_img": "CAESAR264_0_0000.nii",
+        "follow_ups": [
+            "CAESAR264_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR153",
+        "base_img": "CAESAR153_0_0000.nii",
+        "follow_ups": [
+            "CAESAR153_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR045",
+        "base_img": "CAESAR045_0_0000.nii",
+        "follow_ups": [
+            "CAESAR045_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR385",
+        "base_img": "CAESAR385_0_0000.nii",
+        "follow_ups": [
+            "CAESAR385_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR012",
+        "base_img": "CAESAR012_0_0000.nii",
+        "follow_ups": [
+            "CAESAR012_1_0000.nii",
+            "CAESAR012_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR152",
+        "base_img": "CAESAR152_0_0000.nii",
+        "follow_ups": [
+            "CAESAR152_1_0000.nii",
+            "CAESAR152_2_0000.nii",
+            "CAESAR152_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR158",
+        "base_img": "CAESAR158_0_0000.nii",
+        "follow_ups": [
+            "CAESAR158_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR116",
+        "base_img": "CAESAR116_0_0000.nii",
+        "follow_ups": [
+            "CAESAR116_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR548",
+        "base_img": "CAESAR548_0_0000.nii",
+        "follow_ups": [
+            "CAESAR548_1_0000.nii",
+            "CAESAR548_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR072",
+        "base_img": "CAESAR072_0_0000.nii",
+        "follow_ups": [
+            "CAESAR072_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR368",
+        "base_img": "CAESAR368_0_0000.nii",
+        "follow_ups": [
+            "CAESAR368_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR028",
+        "base_img": "CAESAR028_0_0000.nii",
+        "follow_ups": [
+            "CAESAR028_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR161",
+        "base_img": "CAESAR161_0_0000.nii",
+        "follow_ups": [
+            "CAESAR161_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR466",
+        "base_img": "CAESAR466_0_0000.nii",
+        "follow_ups": [
+            "CAESAR466_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR493",
+        "base_img": "CAESAR493_0_0000.nii",
+        "follow_ups": [
+            "CAESAR493_1_0000.nii",
+            "CAESAR493_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR125",
+        "base_img": "CAESAR125_0_0000.nii",
+        "follow_ups": [
+            "CAESAR125_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR459",
+        "base_img": "CAESAR459_0_0000.nii",
+        "follow_ups": [
+            "CAESAR459_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR508",
+        "base_img": "CAESAR459_0_0000.nii",
+        "follow_ups": [
+            "CAESAR508_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR559",
+        "base_img": "CAESAR559_0_0000.nii",
+        "follow_ups": [
+            "CAESAR559_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR084",
+        "base_img": "CAESAR084_0_0000.nii",
+        "follow_ups": [
+            "CAESAR084_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR534",
+        "base_img": "CAESAR534_0_0000.nii",
+        "follow_ups": [
+            "CAESAR534_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR506",
+        "base_img": "CAESAR506_0_0000.nii",
+        "follow_ups": [
+            "CAESAR506_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR195",
+        "base_img": "CAESAR195_0_0000.nii",
+        "follow_ups": [
+            "CAESAR195_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR349",
+        "base_img": "CAESAR349_0_0000.nii",
+        "follow_ups": [
+            "CAESAR349_1_0000.nii",
+            "CAESAR349_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR444",
+        "base_img": "CAESAR444_0_0000.nii",
+        "follow_ups": [
+            "CAESAR444_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR404",
+        "base_img": "CAESAR404_0_0000.nii",
+        "follow_ups": [
+            "CAESAR404_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR293",
+        "base_img": "CAESAR293_0_0000.nii",
+        "follow_ups": [
+            "CAESAR293_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR165",
+        "base_img": "CAESAR165_0_0000.nii",
+        "follow_ups": [
+            "CAESAR165_1_0000.nii",
+            "CAESAR165_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR364",
+        "base_img": "CAESAR364_0_0000.nii",
+        "follow_ups": [
+            "CAESAR364_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR310",
+        "base_img": "CAESAR310_0_0000.nii",
+        "follow_ups": [
+            "CAESAR310_1_0000.nii",
+            "CAESAR310_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR347",
+        "base_img": "CAESAR347_0_0000.nii",
+        "follow_ups": [
+            "CAESAR347_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR323",
+        "base_img": "CAESAR323_0_0000.nii",
+        "follow_ups": [
+            "CAESAR323_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR026",
+        "base_img": "CAESAR026_0_0000.nii",
+        "follow_ups": [
+            "CAESAR026_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR564",
+        "base_img": "CAESAR564_0_0000.nii",
+        "follow_ups": [
+            "CAESAR564_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR070",
+        "base_img": "CAESAR070_0_0000.nii",
+        "follow_ups": [
+            "CAESAR070_1_0000.nii",
+            "CAESAR070_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR187",
+        "base_img": "CAESAR187_0_0000.nii",
+        "follow_ups": [
+            "CAESAR187_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR240",
+        "base_img": "CAESAR240_0_0000.nii",
+        "follow_ups": [
+            "CAESAR240_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR140",
+        "base_img": "CAESAR140_0_0000.nii",
+        "follow_ups": [
+            "CAESAR140_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR482",
+        "base_img": "CAESAR482_0_0000.nii",
+        "follow_ups": [
+            "CAESAR482_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR581",
+        "base_img": "CAESAR581_0_0000.nii",
+        "follow_ups": [
+            "CAESAR581_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR176",
+        "base_img": "CAESAR176_0_0000.nii",
+        "follow_ups": [
+            "CAESAR176_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR271",
+        "base_img": "CAESAR271_0_0000.nii",
+        "follow_ups": [
+            "CAESAR271_1_0000.nii",
+            "CAESAR271_2_0000.nii",
+            "CAESAR271_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR332",
+        "base_img": "CAESAR332_0_0000.nii",
+        "follow_ups": [
+            "CAESAR332_1_0000.nii",
+            "CAESAR332_2_0000.nii",
+            "CAESAR332_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR154",
+        "base_img": "CAESAR154_0_0000.nii",
+        "follow_ups": [
+            "CAESAR154_1_0000.nii",
+            "CAESAR154_2_0000.nii",
+            "CAESAR154_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR423",
+        "base_img": "CAESAR423_0_0000.nii",
+        "follow_ups": [
+            "CAESAR423_1_0000.nii",
+            "CAESAR423_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR528",
+        "base_img": "CAESAR528_0_0000.nii",
+        "follow_ups": [
+            "CAESAR528_1_0000.nii",
+            "CAESAR528_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR220",
+        "base_img": "CAESAR220_0_0000.nii",
+        "follow_ups": [
+            "CAESAR220_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR167",
+        "base_img": "CAESAR167_0_0000.nii",
+        "follow_ups": [
+            "CAESAR167_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR270",
+        "base_img": "CAESAR270_0_0000.nii",
+        "follow_ups": [
+            "CAESAR270_1_0000.nii",
+            "CAESAR270_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR178",
+        "base_img": "CAESAR178_0_0000.nii",
+        "follow_ups": [
+            "CAESAR178_1_0000.nii",
+            "CAESAR178_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR082",
+        "base_img": "CAESAR082_0_0000.nii",
+        "follow_ups": [
+            "CAESAR082_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR210",
+        "base_img": "CAESAR210_0_0000.nii",
+        "follow_ups": [
+            "CAESAR210_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR373",
+        "base_img": "CAESAR373_0_0000.nii",
+        "follow_ups": [
+            "CAESAR373_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR141",
+        "base_img": "CAESAR141_0_0000.nii",
+        "follow_ups": [
+            "CAESAR141_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR568",
+        "base_img": "CAESAR568_0_0000.nii",
+        "follow_ups": [
+            "CAESAR568_1_0000.nii",
+            "CAESAR568_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR529",
+        "base_img": "CAESAR529_0_0000.nii",
+        "follow_ups": [
+            "CAESAR529_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR086",
+        "base_img": "CAESAR086_0_0000.nii",
+        "follow_ups": [
+            "CAESAR086_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR505",
+        "base_img": "CAESAR505_0_0000.nii",
+        "follow_ups": [
+            "CAESAR505_1_0000.nii",
+            "CAESAR505_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR400",
+        "base_img": "CAESAR400_0_0000.nii",
+        "follow_ups": [
+            "CAESAR400_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR402",
+        "base_img": "CAESAR402_0_0000.nii",
+        "follow_ups": [
+            "CAESAR402_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR433",
+        "base_img": "CAESAR433_0_0000.nii",
+        "follow_ups": [
+            "CAESAR433_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR475",
+        "base_img": "CAESAR475_0_0000.nii",
+        "follow_ups": [
+            "CAESAR475_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR497",
+        "base_img": "CAESAR497_0_0000.nii",
+        "follow_ups": [
+            "CAESAR497_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR490",
+        "base_img": "CAESAR490_0_0000.nii",
+        "follow_ups": [
+            "CAESAR490_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR267",
+        "base_img": "CAESAR267_0_0000.nii",
+        "follow_ups": [
+            "CAESAR267_1_0000.nii",
+            "CAESAR267_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR200",
+        "base_img": "CAESAR200_0_0000.nii",
+        "follow_ups": [
+            "CAESAR200_1_0000.nii",
+            "CAESAR200_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR079",
+        "base_img": "CAESAR079_0_0000.nii",
+        "follow_ups": [
+            "CAESAR079_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR421",
+        "base_img": "CAESAR421_0_0000.nii",
+        "follow_ups": [
+            "CAESAR421_1_0000.nii",
+            "CAESAR421_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR378",
+        "base_img": "CAESAR378_0_0000.nii",
+        "follow_ups": [
+            "CAESAR378_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR469",
+        "base_img": "CAESAR378_0_0000.nii",
+        "follow_ups": [
+            "CAESAR469_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR066",
+        "base_img": "CAESAR066_0_0000.nii",
+        "follow_ups": [
+            "CAESAR066_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR302",
+        "base_img": "CAESAR302_0_0000.nii",
+        "follow_ups": [
+            "CAESAR302_1_0000.nii",
+            "CAESAR302_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR204",
+        "base_img": "CAESAR204_0_0000.nii",
+        "follow_ups": [
+            "CAESAR204_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR118",
+        "base_img": "CAESAR118_0_0000.nii",
+        "follow_ups": [
+            "CAESAR118_1_0000.nii",
+            "CAESAR118_2_0000.nii",
+            "CAESAR118_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR314",
+        "base_img": "CAESAR314_0_0000.nii",
+        "follow_ups": [
+            "CAESAR314_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR517",
+        "base_img": "CAESAR517_0_0000.nii",
+        "follow_ups": [
+            "CAESAR517_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR177",
+        "base_img": "CAESAR177_0_0000.nii",
+        "follow_ups": [
+            "CAESAR177_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR022",
+        "base_img": "CAESAR022_0_0000.nii",
+        "follow_ups": [
+            "CAESAR022_1_0000.nii",
+            "CAESAR022_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR311",
+        "base_img": "CAESAR311_0_0000.nii",
+        "follow_ups": [
+            "CAESAR311_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR303",
+        "base_img": "CAESAR303_0_0000.nii",
+        "follow_ups": [
+            "CAESAR303_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR249",
+        "base_img": "CAESAR249_0_0000.nii",
+        "follow_ups": [
+            "CAESAR249_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR259",
+        "base_img": "CAESAR259_0_0000.nii",
+        "follow_ups": [
+            "CAESAR259_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR144",
+        "base_img": "CAESAR144_0_0000.nii",
+        "follow_ups": [
+            "CAESAR144_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR407",
+        "base_img": "CAESAR407_0_0000.nii",
+        "follow_ups": [
+            "CAESAR407_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR212",
+        "base_img": "CAESAR212_0_0000.nii",
+        "follow_ups": [
+            "CAESAR212_1_0000.nii",
+            "CAESAR212_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR030",
+        "base_img": "CAESAR030_0_0000.nii",
+        "follow_ups": [
+            "CAESAR030_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR305",
+        "base_img": "CAESAR305_0_0000.nii",
+        "follow_ups": [
+            "CAESAR305_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR555",
+        "base_img": "CAESAR555_0_0000.nii",
+        "follow_ups": [
+            "CAESAR555_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR396",
+        "base_img": "CAESAR396_0_0000.nii",
+        "follow_ups": [
+            "CAESAR396_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR077",
+        "base_img": "CAESAR077_0_0000.nii",
+        "follow_ups": [
+            "CAESAR077_1_0000.nii",
+            "CAESAR077_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR481",
+        "base_img": "CAESAR481_0_0000.nii",
+        "follow_ups": [
+            "CAESAR481_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR122",
+        "base_img": "CAESAR122_0_0000.nii",
+        "follow_ups": [
+            "CAESAR122_1_0000.nii",
+            "CAESAR122_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR394",
+        "base_img": "CAESAR394_0_0000.nii",
+        "follow_ups": [
+            "CAESAR394_1_0000.nii",
+            "CAESAR394_2_0000.nii",
+            "CAESAR394_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR261",
+        "base_img": "CAESAR261_0_0000.nii",
+        "follow_ups": [
+            "CAESAR261_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR274",
+        "base_img": "CAESAR274_0_0000.nii",
+        "follow_ups": [
+            "CAESAR274_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR322",
+        "base_img": "CAESAR322_0_0000.nii",
+        "follow_ups": [
+            "CAESAR322_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR235",
+        "base_img": "CAESAR235_0_0000.nii",
+        "follow_ups": [
+            "CAESAR235_1_0000.nii",
+            "CAESAR235_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR123",
+        "base_img": "CAESAR123_0_0000.nii",
+        "follow_ups": [
+            "CAESAR123_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR105",
+        "base_img": "CAESAR105_0_0000.nii",
+        "follow_ups": [
+            "CAESAR105_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR554",
+        "base_img": "CAESAR554_0_0000.nii",
+        "follow_ups": [
+            "CAESAR554_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR579",
+        "base_img": "CAESAR579_0_0000.nii",
+        "follow_ups": [
+            "CAESAR579_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR183",
+        "base_img": "CAESAR183_0_0000.nii",
+        "follow_ups": [
+            "CAESAR183_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR053",
+        "base_img": "CAESAR053_0_0000.nii",
+        "follow_ups": [
+            "CAESAR053_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR229",
+        "base_img": "CAESAR229_0_0000.nii",
+        "follow_ups": [
+            "CAESAR229_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR134",
+        "base_img": "CAESAR134_0_0000.nii",
+        "follow_ups": [
+            "CAESAR134_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR439",
+        "base_img": "CAESAR439_0_0000.nii",
+        "follow_ups": [
+            "CAESAR439_1_0000.nii",
+            "CAESAR439_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR556",
+        "base_img": "CAESAR556_0_0000.nii",
+        "follow_ups": [
+            "CAESAR556_1_0000.nii",
+            "CAESAR556_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR232",
+        "base_img": "CAESAR232_0_0000.nii",
+        "follow_ups": [
+            "CAESAR232_1_0000.nii",
+            "CAESAR232_2_0000.nii",
+            "CAESAR232_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR476",
+        "base_img": "CAESAR476_0_0000.nii",
+        "follow_ups": [
+            "CAESAR476_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR380",
+        "base_img": "CAESAR380_0_0000.nii",
+        "follow_ups": [
+            "CAESAR380_1_0000.nii",
+            "CAESAR380_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR354",
+        "base_img": "CAESAR354_0_0000.nii",
+        "follow_ups": [
+            "CAESAR354_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR430",
+        "base_img": "CAESAR430_0_0000.nii",
+        "follow_ups": [
+            "CAESAR430_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR455",
+        "base_img": "CAESAR455_0_0000.nii",
+        "follow_ups": [
+            "CAESAR455_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR309",
+        "base_img": "CAESAR309_0_0000.nii",
+        "follow_ups": [
+            "CAESAR309_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR485",
+        "base_img": "CAESAR485_0_0000.nii",
+        "follow_ups": [
+            "CAESAR485_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR168",
+        "base_img": "CAESAR168_0_0000.nii",
+        "follow_ups": [
+            "CAESAR168_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR207",
+        "base_img": "CAESAR207_0_0000.nii",
+        "follow_ups": [
+            "CAESAR207_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR253",
+        "base_img": "CAESAR253_0_0000.nii",
+        "follow_ups": [
+            "CAESAR253_1_0000.nii",
+            "CAESAR253_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR138",
+        "base_img": "CAESAR138_0_0000.nii",
+        "follow_ups": [
+            "CAESAR138_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR284",
+        "base_img": "CAESAR284_0_0000.nii",
+        "follow_ups": [
+            "CAESAR284_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR461",
+        "base_img": "CAESAR461_0_0000.nii",
+        "follow_ups": [
+            "CAESAR461_1_0000.nii",
+            "CAESAR461_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR558",
+        "base_img": "CAESAR558_0_0000.nii",
+        "follow_ups": [
+            "CAESAR558_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR577",
+        "base_img": "CAESAR577_0_0000.nii",
+        "follow_ups": [
+            "CAESAR577_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR471",
+        "base_img": "CAESAR471_0_0000.nii",
+        "follow_ups": [
+            "CAESAR471_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR052",
+        "base_img": "CAESAR052_0_0000.nii",
+        "follow_ups": [
+            "CAESAR052_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR454",
+        "base_img": "CAESAR454_0_0000.nii",
+        "follow_ups": [
+            "CAESAR454_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR542",
+        "base_img": "CAESAR542_0_0000.nii",
+        "follow_ups": [
+            "CAESAR542_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR575",
+        "base_img": "CAESAR575_0_0000.nii",
+        "follow_ups": [
+            "CAESAR575_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR095",
+        "base_img": "CAESAR095_0_0000.nii",
+        "follow_ups": [
+            "CAESAR095_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR180",
+        "base_img": "CAESAR180_0_0000.nii",
+        "follow_ups": [
+            "CAESAR180_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR048",
+        "base_img": "CAESAR048_0_0000.nii",
+        "follow_ups": [
+            "CAESAR048_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR173",
+        "base_img": "CAESAR173_0_0000.nii",
+        "follow_ups": [
+            "CAESAR173_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR570",
+        "base_img": "CAESAR570_0_0000.nii",
+        "follow_ups": [
+            "CAESAR570_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR306",
+        "base_img": "CAESAR306_0_0000.nii",
+        "follow_ups": [
+            "CAESAR306_1_0000.nii",
+            "CAESAR306_2_0000.nii",
+            "CAESAR306_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR458",
+        "base_img": "CAESAR458_0_0000.nii",
+        "follow_ups": [
+            "CAESAR458_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR488",
+        "base_img": "CAESAR488_0_0000.nii",
+        "follow_ups": [
+            "CAESAR488_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR511",
+        "base_img": "CAESAR511_0_0000.nii",
+        "follow_ups": [
+            "CAESAR511_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR325",
+        "base_img": "CAESAR325_0_0000.nii",
+        "follow_ups": [
+            "CAESAR325_1_0000.nii",
+            "CAESAR325_2_0000.nii",
+            "CAESAR325_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR102",
+        "base_img": "CAESAR102_0_0000.nii",
+        "follow_ups": [
+            "CAESAR102_1_0000.nii",
+            "CAESAR102_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR304",
+        "base_img": "CAESAR304_0_0000.nii",
+        "follow_ups": [
+            "CAESAR304_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR445",
+        "base_img": "CAESAR445_0_0000.nii",
+        "follow_ups": [
+            "CAESAR445_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR571",
+        "base_img": "CAESAR571_0_0000.nii",
+        "follow_ups": [
+            "CAESAR571_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR266",
+        "base_img": "CAESAR266_0_0000.nii",
+        "follow_ups": [
+            "CAESAR266_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR449",
+        "base_img": "CAESAR449_0_0000.nii",
+        "follow_ups": [
+            "CAESAR449_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR155",
+        "base_img": "CAESAR155_0_0000.nii",
+        "follow_ups": [
+            "CAESAR155_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR074",
+        "base_img": "CAESAR074_0_0000.nii",
+        "follow_ups": [
+            "CAESAR074_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR124",
+        "base_img": "CAESAR124_0_0000.nii",
+        "follow_ups": [
+            "CAESAR124_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR092",
+        "base_img": "CAESAR092_0_0000.nii",
+        "follow_ups": [
+            "CAESAR092_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR241",
+        "base_img": "CAESAR241_0_0000.nii",
+        "follow_ups": [
+            "CAESAR241_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR313",
+        "base_img": "CAESAR313_0_0000.nii",
+        "follow_ups": [
+            "CAESAR313_1_0000.nii",
+            "CAESAR313_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR408",
+        "base_img": "CAESAR408_0_0000.nii",
+        "follow_ups": [
+            "CAESAR408_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR336",
+        "base_img": "CAESAR336_0_0000.nii",
+        "follow_ups": [
+            "CAESAR336_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR078",
+        "base_img": "CAESAR078_0_0000.nii",
+        "follow_ups": [
+            "CAESAR078_1_0000.nii",
+            "CAESAR078_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR269",
+        "base_img": "CAESAR269_0_0000.nii",
+        "follow_ups": [
+            "CAESAR269_1_0000.nii",
+            "CAESAR269_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR291",
+        "base_img": "CAESAR291_0_0000.nii",
+        "follow_ups": [
+            "CAESAR291_1_0000.nii",
+            "CAESAR291_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR367",
+        "base_img": "CAESAR367_0_0000.nii",
+        "follow_ups": [
+            "CAESAR367_1_0000.nii",
+            "CAESAR367_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR413",
+        "base_img": "CAESAR413_0_0000.nii",
+        "follow_ups": [
+            "CAESAR413_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR348",
+        "base_img": "CAESAR348_0_0000.nii",
+        "follow_ups": [
+            "CAESAR348_1_0000.nii",
+            "CAESAR348_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR265",
+        "base_img": "CAESAR265_0_0000.nii",
+        "follow_ups": [
+            "CAESAR265_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR350",
+        "base_img": "CAESAR350_0_0000.nii",
+        "follow_ups": [
+            "CAESAR350_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR484",
+        "base_img": "CAESAR484_0_0000.nii",
+        "follow_ups": [
+            "CAESAR484_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR307",
+        "base_img": "CAESAR307_0_0000.nii",
+        "follow_ups": [
+            "CAESAR307_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR299",
+        "base_img": "CAESAR299_0_0000.nii",
+        "follow_ups": [
+            "CAESAR299_1_0000.nii",
+            "CAESAR299_2_0000.nii",
+            "CAESAR299_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR245",
+        "base_img": "CAESAR245_0_0000.nii",
+        "follow_ups": [
+            "CAESAR245_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR113",
+        "base_img": "CAESAR113_0_0000.nii",
+        "follow_ups": [
+            "CAESAR113_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR216",
+        "base_img": "CAESAR216_0_0000.nii",
+        "follow_ups": [
+            "CAESAR216_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR088",
+        "base_img": "CAESAR088_0_0000.nii",
+        "follow_ups": [
+            "CAESAR088_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR296",
+        "base_img": "CAESAR296_0_0000.nii",
+        "follow_ups": [
+            "CAESAR296_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR351",
+        "base_img": "CAESAR351_0_0000.nii",
+        "follow_ups": [
+            "CAESAR351_1_0000.nii",
+            "CAESAR351_2_0000.nii",
+            "CAESAR351_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR136",
+        "base_img": "CAESAR136_0_0000.nii",
+        "follow_ups": [
+            "CAESAR136_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR018",
+        "base_img": "CAESAR018_0_0000.nii",
+        "follow_ups": [
+            "CAESAR018_1_0000.nii",
+            "CAESAR018_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR166",
+        "base_img": "CAESAR166_0_0000.nii",
+        "follow_ups": [
+            "CAESAR166_1_0000.nii",
+            "CAESAR166_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR539",
+        "base_img": "CAESAR539_0_0000.nii",
+        "follow_ups": [
+            "CAESAR539_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR087",
+        "base_img": "CAESAR087_0_0000.nii",
+        "follow_ups": [
+            "CAESAR087_1_0000.nii",
+            "CAESAR087_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR512",
+        "base_img": "CAESAR512_0_0000.nii",
+        "follow_ups": [
+            "CAESAR512_1_0000.nii",
+            "CAESAR512_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR135",
+        "base_img": "CAESAR135_0_0000.nii",
+        "follow_ups": [
+            "CAESAR135_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR372",
+        "base_img": "CAESAR372_0_0000.nii",
+        "follow_ups": [
+            "CAESAR372_1_0000.nii",
+            "CAESAR372_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR383",
+        "base_img": "CAESAR383_0_0000.nii",
+        "follow_ups": [
+            "CAESAR383_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR537",
+        "base_img": "CAESAR537_0_0000.nii",
+        "follow_ups": [
+            "CAESAR537_1_0000.nii",
+            "CAESAR537_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR010",
+        "base_img": "CAESAR010_0_0000.nii",
+        "follow_ups": [
+            "CAESAR010_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR352",
+        "base_img": "CAESAR352_0_0000.nii",
+        "follow_ups": [
+            "CAESAR352_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR480",
+        "base_img": "CAESAR480_0_0000.nii",
+        "follow_ups": [
+            "CAESAR480_1_0000.nii",
+            "CAESAR480_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR442",
+        "base_img": "CAESAR442_0_0000.nii",
+        "follow_ups": [
+            "CAESAR442_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR062",
+        "base_img": "CAESAR062_0_0000.nii",
+        "follow_ups": [
+            "CAESAR062_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR047",
+        "base_img": "CAESAR047_0_0000.nii",
+        "follow_ups": [
+            "CAESAR047_1_0000.nii",
+            "CAESAR047_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR409",
+        "base_img": "CAESAR409_0_0000.nii",
+        "follow_ups": [
+            "CAESAR409_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR162",
+        "base_img": "CAESAR162_0_0000.nii",
+        "follow_ups": [
+            "CAESAR162_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR386",
+        "base_img": "CAESAR386_0_0000.nii",
+        "follow_ups": [
+            "CAESAR386_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR441",
+        "base_img": "CAESAR441_0_0000.nii",
+        "follow_ups": [
+            "CAESAR441_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR547",
+        "base_img": "CAESAR547_0_0000.nii",
+        "follow_ups": [
+            "CAESAR547_1_0000.nii",
+            "CAESAR547_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR188",
+        "base_img": "CAESAR188_0_0000.nii",
+        "follow_ups": [
+            "CAESAR188_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR083",
+        "base_img": "CAESAR083_0_0000.nii",
+        "follow_ups": [
+            "CAESAR083_1_0000.nii",
+            "CAESAR083_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR127",
+        "base_img": "CAESAR127_0_0000.nii",
+        "follow_ups": [
+            "CAESAR127_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR410",
+        "base_img": "CAESAR410_0_0000.nii",
+        "follow_ups": [
+            "CAESAR410_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR139",
+        "base_img": "CAESAR139_0_0000.nii",
+        "follow_ups": [
+            "CAESAR139_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR014",
+        "base_img": "CAESAR014_0_0000.nii",
+        "follow_ups": [
+            "CAESAR014_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR362",
+        "base_img": "CAESAR362_0_0000.nii",
+        "follow_ups": [
+            "CAESAR362_1_0000.nii",
+            "CAESAR362_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR043",
+        "base_img": "CAESAR043_0_0000.nii",
+        "follow_ups": [
+            "CAESAR043_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR326",
+        "base_img": "CAESAR326_0_0000.nii",
+        "follow_ups": [
+            "CAESAR326_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR561",
+        "base_img": "CAESAR561_0_0000.nii",
+        "follow_ups": [
+            "CAESAR561_1_0000.nii",
+            "CAESAR561_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR197",
+        "base_img": "CAESAR197_0_0000.nii",
+        "follow_ups": [
+            "CAESAR197_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR191",
+        "base_img": "CAESAR191_0_0000.nii",
+        "follow_ups": [
+            "CAESAR191_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR257",
+        "base_img": "CAESAR257_0_0000.nii",
+        "follow_ups": [
+            "CAESAR257_1_0000.nii",
+            "CAESAR257_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR334",
+        "base_img": "CAESAR334_0_0000.nii",
+        "follow_ups": [
+            "CAESAR334_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR346",
+        "base_img": "CAESAR346_0_0000.nii",
+        "follow_ups": [
+            "CAESAR346_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR388",
+        "base_img": "CAESAR388_0_0000.nii",
+        "follow_ups": [
+            "CAESAR388_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR262",
+        "base_img": "CAESAR262_0_0000.nii",
+        "follow_ups": [
+            "CAESAR262_1_0000.nii",
+            "CAESAR262_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR319",
+        "base_img": "CAESAR319_0_0000.nii",
+        "follow_ups": [
+            "CAESAR319_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR335",
+        "base_img": "CAESAR335_0_0000.nii",
+        "follow_ups": [
+            "CAESAR335_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR504",
+        "base_img": "CAESAR504_0_0000.nii",
+        "follow_ups": [
+            "CAESAR504_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR287",
+        "base_img": "CAESAR287_0_0000.nii",
+        "follow_ups": [
+            "CAESAR287_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR324",
+        "base_img": "CAESAR324_0_0000.nii",
+        "follow_ups": [
+            "CAESAR324_1_0000.nii",
+            "CAESAR324_2_0000.nii",
+            "CAESAR324_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR242",
+        "base_img": "CAESAR242_0_0000.nii",
+        "follow_ups": [
+            "CAESAR242_1_0000.nii",
+            "CAESAR242_2_0000.nii",
+            "CAESAR242_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR236",
+        "base_img": "CAESAR236_0_0000.nii",
+        "follow_ups": [
+            "CAESAR236_1_0000.nii",
+            "CAESAR236_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR544",
+        "base_img": "CAESAR544_0_0000.nii",
+        "follow_ups": [
+            "CAESAR544_1_0000.nii",
+            "CAESAR544_2_0000.nii",
+            "CAESAR544_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR384",
+        "base_img": "CAESAR384_0_0000.nii",
+        "follow_ups": [
+            "CAESAR384_1_0000.nii",
+            "CAESAR384_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR417",
+        "base_img": "CAESAR417_0_0000.nii",
+        "follow_ups": [
+            "CAESAR417_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR049",
+        "base_img": "CAESAR049_0_0000.nii",
+        "follow_ups": [
+            "CAESAR049_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR131",
+        "base_img": "CAESAR131_0_0000.nii",
+        "follow_ups": [
+            "CAESAR131_1_0000.nii",
+            "CAESAR131_2_0000.nii",
+            "CAESAR131_3_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR356",
+        "base_img": "CAESAR356_0_0000.nii",
+        "follow_ups": [
+            "CAESAR356_1_0000.nii",
+            "CAESAR356_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR440",
+        "base_img": "CAESAR440_0_0000.nii",
+        "follow_ups": [
+            "CAESAR440_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR308",
+        "base_img": "CAESAR308_0_0000.nii",
+        "follow_ups": [
+            "CAESAR308_1_0000.nii",
+            "CAESAR308_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR366",
+        "base_img": "CAESAR366_0_0000.nii",
+        "follow_ups": [
+            "CAESAR366_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR574",
+        "base_img": "CAESAR574_0_0000.nii",
+        "follow_ups": [
+            "CAESAR574_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR218",
+        "base_img": "CAESAR218_0_0000.nii",
+        "follow_ups": [
+            "CAESAR218_1_0000.nii",
+            "CAESAR218_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR227",
+        "base_img": "CAESAR227_0_0000.nii",
+        "follow_ups": [
+            "CAESAR227_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR061",
+        "base_img": "CAESAR227_0_0000.nii",
+        "follow_ups": [
+            "CAESAR061_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR576",
+        "base_img": "CAESAR576_0_0000.nii",
+        "follow_ups": [
+            "CAESAR576_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR501",
+        "base_img": "CAESAR501_0_0000.nii",
+        "follow_ups": [
+            "CAESAR501_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR097",
+        "base_img": "CAESAR097_0_0000.nii",
+        "follow_ups": [
+            "CAESAR097_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR174",
+        "base_img": "CAESAR174_0_0000.nii",
+        "follow_ups": [
+            "CAESAR174_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR527",
+        "base_img": "CAESAR527_0_0000.nii",
+        "follow_ups": [
+            "CAESAR527_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR237",
+        "base_img": "CAESAR237_0_0000.nii",
+        "follow_ups": [
+            "CAESAR237_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR390",
+        "base_img": "CAESAR390_0_0000.nii",
+        "follow_ups": [
+            "CAESAR390_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR202",
+        "base_img": "CAESAR202_0_0000.nii",
+        "follow_ups": [
+            "CAESAR202_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR318",
+        "base_img": "CAESAR318_0_0000.nii",
+        "follow_ups": [
+            "CAESAR318_1_0000.nii",
+            "CAESAR318_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR566",
+        "base_img": "CAESAR566_0_0000.nii",
+        "follow_ups": [
+            "CAESAR566_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR457",
+        "base_img": "CAESAR457_0_0000.nii",
+        "follow_ups": [
+            "CAESAR457_1_0000.nii",
+            "CAESAR457_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR142",
+        "base_img": "CAESAR142_0_0000.nii",
+        "follow_ups": [
+            "CAESAR142_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR494",
+        "base_img": "CAESAR494_0_0000.nii",
+        "follow_ups": [
+            "CAESAR494_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR562",
+        "base_img": "CAESAR562_0_0000.nii",
+        "follow_ups": [
+            "CAESAR562_1_0000.nii",
+            "CAESAR562_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR128",
+        "base_img": "CAESAR128_0_0000.nii",
+        "follow_ups": [
+            "CAESAR128_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR185",
+        "base_img": "CAESAR185_0_0000.nii",
+        "follow_ups": [
+            "CAESAR185_1_0000.nii",
+            "CAESAR185_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR446",
+        "base_img": "CAESAR446_0_0000.nii",
+        "follow_ups": [
+            "CAESAR446_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR027",
+        "base_img": "CAESAR027_0_0000.nii",
+        "follow_ups": [
+            "CAESAR027_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR530",
+        "base_img": "CAESAR530_0_0000.nii",
+        "follow_ups": [
+            "CAESAR530_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR443",
+        "base_img": "CAESAR443_0_0000.nii",
+        "follow_ups": [
+            "CAESAR443_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR500",
+        "base_img": "CAESAR500_0_0000.nii",
+        "follow_ups": [
+            "CAESAR500_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR312",
+        "base_img": "CAESAR312_0_0000.nii",
+        "follow_ups": [
+            "CAESAR312_1_0000.nii",
+            "CAESAR312_2_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR036",
+        "base_img": "CAESAR036_0_0000.nii",
+        "follow_ups": [
+            "CAESAR036_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR519",
+        "base_img": "CAESAR519_0_0000.nii",
+        "follow_ups": [
+            "CAESAR519_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR375",
+        "base_img": "CAESAR375_0_0000.nii",
+        "follow_ups": [
+            "CAESAR375_1_0000.nii"
+        ]
+    },
+    {
+        "patient_id": "CAESAR295",
+        "base_img": "CAESAR295_0_0000.nii",
+        "follow_ups": [
+            "CAESAR295_1_0000.nii"
+        ]
+    }
+]
