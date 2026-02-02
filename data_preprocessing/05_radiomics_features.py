@@ -61,10 +61,14 @@ def extract_lesion_radiomics(
     mask_path: str,
     bin_width: int = 25,
     min_voxels: int = 50,
+    out_csv_path: str = None,
 ):
     img = sitk.ReadImage(ct_path)
     msk = sitk.ReadImage(mask_path)
-
+    # check if mask has values
+    arr_mask = sitk.GetArrayFromImage(msk)
+    if np.sum(arr_mask) == 0:
+        return 
     # Ensure mask is on image grid
     if not same_geometry(img, msk):
         msk = resample_mask_to_image(msk, img)
@@ -72,7 +76,8 @@ def extract_lesion_radiomics(
     arr = sitk.GetArrayFromImage(msk)
     labels = [int(x) for x in np.unique(arr) if int(x) != 0]
     if len(labels) == 0:
-        raise ValueError("No lesion labels found in mask (all zeros).")
+        return
+        # raise ValueError("No lesion labels found in mask (all zeros).")
 
     extractor = build_extractor(bin_width=bin_width)
 
@@ -98,7 +103,8 @@ def extract_lesion_radiomics(
         raise ValueError(f"All lesions were below min_voxels={min_voxels}.")
 
     df_lesions = pd.DataFrame(lesion_rows)
-    return df_lesions
+    df_lesions.to_csv(out_csv_path, index=False)
+
 
 def perform_one_extraction(args):
     ct_path, mask_path, bin_width, min_voxels, out_csv_path = args
@@ -107,8 +113,8 @@ def perform_one_extraction(args):
                 str(mask_path),
                 bin_width=bin_width,
                 min_voxels=min_voxels,
+                out_csv_path=out_csv_path,
             )
-    df_lesions.to_csv(out_csv_path, index=False)
 
 
 def main(data_config_dir):
@@ -118,7 +124,7 @@ def main(data_config_dir):
     ct_base_dir = Path(preprocessed_data_base_dir) / "04_images_resampled_marginal_cropped"
     seg_base_dir = Path(preprocessed_data_base_dir) / "04_segmentations_resampled_marginal_cropped"
 
-    output_dir = Path(preprocessed_data_base_dir) / "05_radiomics_shape_features"
+    output_dir = Path(preprocessed_data_base_dir) / "05_radiomics_features"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     seg_paths = sorted(list(seg_base_dir.rglob("*.nii.gz")))
