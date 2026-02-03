@@ -2,8 +2,8 @@
 radiomics_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/05_radiomics_features
 extra_shape_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/06_extra_shape_features
 batch_size: 32
-num_workers: 4
-lr: 0.01
+num_workers: 10
+lr: 0.05
 max_epochs: 100
 
 # Core Shape & Size

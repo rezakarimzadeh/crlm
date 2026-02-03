@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from utils import read_yaml, read_json
-from radiomics_shape_dataset_prep import CustomDataset, FastCustomDataset
+from dataloaders.radiomics_shape_dataset_prep import CustomDataset, FastCustomDataset
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
@@ -158,7 +158,7 @@ def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_t
     dataset_val = FastCustomDataset(matched_val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
     dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
 
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6, collate_fn=collate_fn)
+    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=10, collate_fn=collate_fn)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)
     test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)
     return train_loader, val_loader, test_loader

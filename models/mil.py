@@ -47,9 +47,12 @@ class AttentionMIL(nn.Module):
 class Classifier(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(Classifier, self).__init__()
+
         self.classifier = nn.Sequential(
+            # nn.BatchNorm1d(input_dim),
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
+            nn.Dropout(0.5),
             nn.ReLU(),
             nn.Linear(hidden_dim, output_dim)
         )
@@ -61,11 +64,11 @@ class RadiomicsMIL(pl.LightningModule):
     def __init__(self, features_dim: int, demographic_dim: int, config_dir: str):
         super(RadiomicsMIL, self).__init__()
         self.save_hyperparameters()
-        dim = int((4/5)*features_dim)
+        dim = 128 #int((4/5)*features_dim)
         self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
-        self.overall_survival_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2)
-        self.early_response_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2)
+        self.overall_survival_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
+        self.early_response_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
 
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
@@ -78,9 +81,9 @@ class RadiomicsMIL(pl.LightningModule):
         self.f1 = BinaryF1Score()
 
     def forward(self, batch):
-        base_emb = self.mil_model(x=batch["base"]["features"], pad_mask=batch["base"]["pad_mask"])
-        followup_emb = self.mil_model(x=batch["followup"]["features"], pad_mask=batch["followup"]["pad_mask"])
-        combined_emb = torch.cat([base_emb, followup_emb, batch["demographic_info"]], dim=1)
+        base_emb = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
+        followup_emb = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
+        combined_emb = torch.cat([base_emb - followup_emb, base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
         logits_overall_survival = self.overall_survival_head(combined_emb)
         logits_early_response = self.early_response_head(combined_emb)
         logits = {"survival": logits_overall_survival, "early_response": logits_early_response}
@@ -88,8 +91,8 @@ class RadiomicsMIL(pl.LightningModule):
 
     def _shared_step(self, batch, stage):
         logits = self(batch)
-        gt_survival = batch["targets"]["overall_survival_24m"].int()
-        gt_early_response = batch["targets"]["early_response"].int()
+        gt_survival = batch["targets"]["overall_survival_24m"].long()
+        gt_early_response = batch["targets"]["early_response"].long()
         loss = self.criterion(logits["survival"], gt_survival) + self.criterion(logits["early_response"], gt_early_response)
         y_hat_survival = torch.argmax(logits["survival"], dim=1)
         y_hat_response = torch.argmax(logits["early_response"], dim=1)
@@ -104,8 +107,8 @@ class RadiomicsMIL(pl.LightningModule):
         return loss
     
     def get_attentions(self, batch):
-        _, base_attention = self.mil_model(x=batch["base"]["features"], pad_mask=batch["base"]["pad_mask"], attention=True)
-        _, followup_attention = self.mil_model(x=batch["followup"]["features"], pad_mask=batch["followup"]["pad_mask"], attention=True)
+        _, base_attention = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device), attention=True)
+        _, followup_attention = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device), attention=True)
         return base_attention, followup_attention
     
     def training_step(self, batch, batch_idx):
@@ -124,40 +127,45 @@ class RadiomicsMIL(pl.LightningModule):
 
 
 class MaskedBatchNorm1d(nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1):
         super().__init__()
-        self.bn = nn.BatchNorm1d(num_features)
+        self.bn = nn.BatchNorm1d(num_features, eps=eps, momentum=momentum)
 
     def forward(self, x, pad_mask=None):
         """
-        x: [B, T, F]
-        pad_mask: [B, T] boolean, True for PAD positions, False for valid data
+        x: [B, T, F]  (must be float)
+        pad_mask: [B, T] boolean, True for PAD, False for valid
         """
+        x = x.float()  # BN needs float
+        device = x.device
         B, T, F = x.shape
-        x_flat = x.view(B * T, F)
 
-        # No mask -> just do normal BN
+        assert F == self.bn.num_features, f"BN expects {self.bn.num_features} features, got {F}"
+
         if pad_mask is None:
+            x_flat = x.reshape(B * T, F)
             x_bn = self.bn(x_flat)
-            return x_bn.view(B, T, F)
+            return x_bn.reshape(B, T, F)
 
-        # Flatten mask: True = pad, False = valid
-        mask_flat = pad_mask.reshape(B * T)   # [B*T]
-        valid_idx = ~mask_flat               # True where we have real data
+        pad_mask = pad_mask.to(device=device, dtype=torch.bool)
+        x_flat = x.reshape(B * T, F)
 
-        # Edge case: if a batch is entirely padding, just return x
-        if valid_idx.sum() == 0:
+        mask_flat = pad_mask.reshape(B * T)     # True=pad
+        valid_idx = ~mask_flat                  # True=valid
+
+        n_valid = int(valid_idx.sum().item())
+        if n_valid == 0:
             return x
 
-        # Select only valid positions
-        x_valid = x_flat[valid_idx]          # [N_valid, F]
+        x_valid = x_flat[valid_idx]             # [N_valid, F]
 
-        # Apply BN only on valid entries
-        x_valid_bn = self.bn(x_valid)        # [N_valid, F]
+        # Avoid BN instability with tiny batches in training
+        if self.training and n_valid < 2:
+            return x
 
-        # Put them back into their original positions
-        x_flat_out          = x_flat.clone()
+        x_valid_bn = self.bn(x_valid)
+
+        x_flat_out = x_flat.clone()
         x_flat_out[valid_idx] = x_valid_bn
 
-        x_out = x_flat_out.view(B, T, F)
-        return x_out
+        return x_flat_out.reshape(B, T, F)

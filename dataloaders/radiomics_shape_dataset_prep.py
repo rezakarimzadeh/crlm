@@ -134,7 +134,7 @@ class FastCustomDataset(Dataset):
         feature_to_include,
         dataloader_config: dict,
         cache_dir: str = './cached_data',
-        use_cache: bool = True,
+        use_cache: bool = False,
         verbose: bool = False,
     ):
         """

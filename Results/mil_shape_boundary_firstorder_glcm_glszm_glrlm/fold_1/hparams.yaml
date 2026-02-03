@@ -1,0 +1,3 @@
+config_dir: ./configs/radiomics_shape_model_config.yaml
+demographic_dim: 4
+features_dim: 116

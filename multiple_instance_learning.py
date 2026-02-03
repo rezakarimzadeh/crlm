@@ -5,21 +5,23 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from models.mil import RadiomicsMIL
 from dataloaders.radiomics_shape_dataloader import get_radiomics_shape_dataloaders
-from utils import test_model, compute_classification_metrics, save_json
+from utils import test_model, compute_classification_metrics, save_json, read_yaml
 from pathlib import Path
 import os
 import pandas as pd
-impohutil
 import argparse
+import numpy as np
+import time
 # pl.seed_everything(42)
 
 
 
 
-def train_dl_model(argparse, fold_index: int):
-    data_config_dir = './configs/data_config.yaml'
-    model_config_dir = './configs/radiomics_shape_model_config.yaml'
-    feature_to_include = ['shape', 'boundary', 'firstorder', 'glcm', 'glszm_glrlm']  
+def train_dl_model(args, fold_index: int):
+    data_config_dir = args.data_config_dir
+    model_config_dir = args.model_config_dir
+    model_config = read_yaml(model_config_dir)
+    feature_to_include = args.feature_to_include  
     train_loader, val_loader, test_loader = get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_index)
 
     # define input dimension
@@ -27,9 +29,7 @@ def train_dl_model(argparse, fold_index: int):
     input_dim = sample_batch['base']['features'].shape[-1]
     
     model = RadiomicsMIL(features_dim=input_dim, demographic_dim=sample_batch['demographic_info'].shape[-1], config_dir=model_config_dir)
-    print("================= Training Configuration ================")
-    print(f"Input feature dimension: {input_dim}, Model: {argparse.model_name}, Fold: {fold_index}, coords: {argparse.use_coords}, demographic: {argparse.use_demographic}")
-
+  
     ckpt = ModelCheckpoint(
         monitor="val_loss",
         mode="min",
@@ -41,84 +41,90 @@ def train_dl_model(argparse, fold_index: int):
     str_included_features = "_".join(feature_to_include)
     log_name = f"mil_{str_included_features}"
 
-    save_dir = os.path.join("Results", log_name, f"fold_{fold_index}")
-    if os.path.exists(save_dir):
-        # delete existing directory
-        shutil.rmtree(save_dir)
+    save_dir = Path("Results") / log_name / f"fold_{fold_index}"
+    if save_dir.exists():
+        shutil.rmtree(save_dir, ignore_errors=True)
+        time.sleep(0.2)
     #  TensorBoard logger
     tb_logger = TensorBoardLogger(save_dir="Results", name=log_name, version=f"fold_{fold_index}")
 
     #  Trainer 
     trainer = pl.Trainer(
-            max_epochs=model_configs['max_epochs'],
+            max_epochs=model_config['max_epochs'],
             callbacks=[ckpt],
             logger=tb_logger,
             accelerator="auto",
             devices="auto",
             )
     #  Train
+    print("================= Training Configuration ================")
+    print(f"Input feature dimension: {input_dim}, Fold: {fold_index}, included features: {args.feature_to_include}, LR: {model_config['lr']}, Max Epochs: {model_config['max_epochs']}")
+
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
     print(f"Best checkpoint: {ckpt.best_model_path}")
     #  Test
     best_model = RadiomicsMIL.load_from_checkpoint(ckpt.best_model_path, config_dir=model_config_dir, features_dim=input_dim, demographic_dim=sample_batch['demographic_info'].shape[-1])
-
     test_output = test_model(best_model, test_loader)
-    overall_survival_results = compute_classification_metrics("overall_survival", test_output)
-    early_response_results = compute_classification_metrics("early_response", test_output)
-    fold_results = {"overall_survival": overall_survival_results, "early_response": early_response_results}
-    print(f"Test Results Fold {fold_index}: {classification_results}")
-    fold_results = {'fold': fold_index, **classification_results, 'best_checkpoint': ckpt.best_model_path,
+    overall_survival_classification_metrics = compute_classification_metrics("overall_survival", test_output)
+    early_response_classification_metrics = compute_classification_metrics("early_response", test_output)
+    fold_results = {"overall_survival": overall_survival_classification_metrics, "early_response": early_response_classification_metrics}
+
+    fold_results = {'fold': fold_index, 
+                    "overall_survival_classification_metrics": overall_survival_classification_metrics, 
+                    "early_response_classification_metrics": early_response_classification_metrics, 
+                    'best_checkpoint': ckpt.best_model_path,
                     'used_features': feature_to_include,  
-                    'y_true': test_output['y_true'], 'y_pred': test_output['y_pred'], 'y_prob': test_output['y_prob']}
+                    **test_output}
 
     save_json(Path(save_dir) / f"results_fold_{fold_index}.json", fold_results)
 
-    return pd.DataFrame([fold_results]), Path("Results") / log_name 
+    return fold_results, Path("Results") / log_name 
 
 
-def fivefold_cv(argparse):
-    aggrigation_list = []
-    center2_aggrigation_list = []
+def fivefold_cv(args):
+    os_rows = []
+    er_rows = []
+    model_save_path_last = None
+
     for fold_idx in range(5):
-        classification_results, model_save_path = train_dl_model(argparse, fold_idx)
-        aggrigation_list.append(classification_results)
+        results, model_save_path = train_dl_model(args, fold_idx)
+        model_save_path_last = model_save_path
 
-    aggregated_metrics = pd.concat(aggrigation_list).groupby("model").agg(
-        Accuracy_Mean=("accuracy", "mean"),
-        Accuracy_STD=("accuracy", "std"),
-        ROC_AUC_Mean=("roc_auc", "mean"),
-        ROC_AUC_STD=("roc_auc", "std"),
-        Precision_Mean=("precision", "mean"),
-        Precision_STD=("precision", "std"),
-        Recall_Mean=("recall", "mean"),
-        Recall_STD=("recall", "std"),
-        Specificity_Mean=("specificity", "mean"),
-        Specificity_STD=("specificity", "std"),
-        F1_Score_Mean=("f1_score", "mean"),
-        F1_Score_STD=("f1_score", "std"),
-    ).reset_index()
-    print("\nAggregated Model Performance on Masih Dataset over 5 folds:")
-    # aggregated_metrics['use_coords'] = argparse.use_coords
-    print(aggregated_metrics)
-    save_json(model_save_path / "aggregated_results.json", aggregated_metrics.to_dict(orient="records"))
+        os_metrics = results["overall_survival_classification_metrics"]
+        er_metrics = results["early_response_classification_metrics"]
+        # convert numpy scalars to python floats
+        os_rows.append({k: float(v) for k, v in os_metrics.items()})
+        er_rows.append({k: float(v) for k, v in er_metrics.items()})
+
+    df_os = pd.DataFrame(os_rows)
+    df_er = pd.DataFrame(er_rows)
+
+    def aggregate(df):
+        return {
+            f"{c}_mean": float(df[c].mean())
+            for c in df.columns
+        } | {
+            f"{c}_std": float(df[c].std(ddof=1))
+            for c in df.columns
+        }
+
+    os_agg = aggregate(df_os)
+    er_agg = aggregate(df_er)
+
+    out = {
+        "overall_survival": os_agg,
+        "early_response": er_agg,
+    }
+
+    save_json(model_save_path_last / "fivefold_aggregated_results.json", out)
 
 
 def main():
-    def str2bool(v):
-        if isinstance(v, bool):
-            return v
-        if v.lower() in ("True", "yes", "true", "t", "1"):
-            return True
-        elif v.lower() in ("False""no", "false", "f", "0"):
-            return False
-        else:
-            raise argparse.ArgumentTypeError("Boolean value expected.")
-
     parser = argparse.ArgumentParser(description="Train and evaluate models with 5-fold cross-validation.")
-    parser.add_argument("--data_root", type=str, default="/home/reza/Documents/Reza_projects/08_drarabi_lymphnodes/new_dataset", help="Base directory for the dataset.")
-    parser.add_argument("--model_name", type=str, default="mil", choices=["transformer", "deep_sets", "mil", "ml_models", 'graph', 'set_transformer'], help="Name of the model to train.")
-    parser.add_argument("--use_coords", type=str2bool, default=False, help="Whether to use coordinates features.")
-    parser.add_argument("--use_demographic", type=str2bool, default=False, help="Whether to use demographic features.")
+    parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
+    parser.add_argument("--model_config_dir", type=str, default="./configs/radiomics_shape_model_config.yaml", help="model config file path.")
+    parser.add_argument("--feature_to_include", type=str, default=['shape', 'boundary', 'firstorder', 'glcm', 'glszm_glrlm'], help="model name to use.")
+
     args = parser.parse_args()
     fivefold_cv(args)
 
