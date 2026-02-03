@@ -3,9 +3,13 @@ raw_segmentations_ai_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morp
 
 preprocessed_data_base_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM
 
+# used in 04 script for cropping and resampling
 crop_dimensions_mm: [320.0, 256.0, 384.0]  # [x, y, z] in mm
-
 resample_spacing_mm: [1.0, 1.0, 3.0]  # [x, y, z] in mm
 
+# radiomics parameters in script 05
 radiomics_bin_width: 25
 radiomics_min_voxels: 50
+
+# paths to excel files for data loaders 
+excel_path: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/dataset_CAESAR_dec23_MASTER.xlsx

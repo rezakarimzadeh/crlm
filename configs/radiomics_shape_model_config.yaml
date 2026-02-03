@@ -1,0 +1,138 @@
+
+radiomics_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/05_radiomics_features
+extra_shape_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/06_extra_shape_features
+batch_size: 32
+num_workers: 4
+lr: 0.01
+max_epochs: 100
+
+# Core Shape & Size
+shape:
+  - original_shape_Elongation
+  - original_shape_Flatness
+  - original_shape_LeastAxisLength
+  - original_shape_MajorAxisLength
+  - original_shape_MinorAxisLength
+  - original_shape_Maximum2DDiameterColumn
+  - original_shape_Maximum2DDiameterRow
+  - original_shape_Maximum2DDiameterSlice
+  - original_shape_Maximum3DDiameter
+  - original_shape_MeshVolume
+  - original_shape_Sphericity
+  - original_shape_SurfaceArea
+  - original_shape_SurfaceVolumeRatio
+  - original_shape_VoxelVolume
+  - lesion_voxels
+  - lesion_volume_mm3
+
+# Boundary / Invasion / Rim Phenotype (Very High Value)
+boundary:
+  - extra_edt_mean_mm
+  - extra_edt_std_mm
+  - extra_edt_max_mm
+  - extra_edt_q10_mm
+  - extra_edt_q25_mm
+  - extra_edt_q50_mm
+  - extra_edt_q75_mm
+  - extra_edt_q90_mm
+  - extra_edt_interior_mean_mm
+  - extra_edt_interior_std_mm
+  - extra_edt_interior_max_mm
+  - extra_edt_interior_q10_mm
+  - extra_edt_interior_q25_mm
+  - extra_edt_interior_q50_mm
+  - extra_edt_interior_q75_mm
+  - extra_edt_interior_q90_mm
+  - extra_edt_zero_frac
+  - extra_rim1mm_frac
+  - extra_rim2mm_frac
+  - extra_radial_std_mm
+  - extra_radial_iqr_mm
+  - extra_radial_p90_p10_mm
+  - extra_radial_max_min_ratio
+  - extra_hull_volume_mm3
+  - extra_hull_area_mm2
+  - extra_solidity
+
+# First-Order Intensity (Necrosis / Viability)
+firstorder:
+  - original_firstorder_10Percentile
+  - original_firstorder_90Percentile
+  - original_firstorder_Energy
+  - original_firstorder_Entropy
+  - original_firstorder_InterquartileRange
+  - original_firstorder_Kurtosis
+  - original_firstorder_Maximum
+  - original_firstorder_MeanAbsoluteDeviation
+  - original_firstorder_Mean
+  - original_firstorder_Median
+  - original_firstorder_Minimum
+  - original_firstorder_Range
+  - original_firstorder_RobustMeanAbsoluteDeviation
+  - original_firstorder_RootMeanSquared
+  - original_firstorder_Skewness
+  - original_firstorder_TotalEnergy
+  - original_firstorder_Uniformity
+  - original_firstorder_Variance
+
+# GLCM features (Texture - Gray Level Co-occurrence Matrix) (Local Texture / Micro-heterogeneity)
+glcm:
+  - original_glcm_Autocorrelation
+  - original_glcm_ClusterProminence
+  - original_glcm_ClusterShade
+  - original_glcm_ClusterTendency
+  - original_glcm_Contrast
+  - original_glcm_Correlation
+  - original_glcm_DifferenceAverage
+  - original_glcm_DifferenceEntropy
+  - original_glcm_DifferenceVariance
+  - original_glcm_Id
+  - original_glcm_Idm
+  - original_glcm_Idmn
+  - original_glcm_Idn
+  - original_glcm_Imc1
+  - original_glcm_Imc2
+  - original_glcm_InverseVariance
+  - original_glcm_JointAverage
+  - original_glcm_JointEnergy
+  - original_glcm_JointEntropy
+  - original_glcm_MCC
+  - original_glcm_MaximumProbability
+  - original_glcm_SumAverage
+  - original_glcm_SumEntropy
+  - original_glcm_SumSquares
+
+# GLSZM and GLRLM features ((Run-Length / Structural Patterns) and (Regional Zone Patterns))
+glszm_glrlm:
+  - original_glszm_GrayLevelNonUniformity
+  - original_glszm_GrayLevelNonUniformityNormalized
+  - original_glszm_GrayLevelVariance
+  - original_glszm_HighGrayLevelZoneEmphasis
+  - original_glszm_LargeAreaEmphasis
+  - original_glszm_LargeAreaHighGrayLevelEmphasis
+  - original_glszm_LargeAreaLowGrayLevelEmphasis
+  - original_glszm_LowGrayLevelZoneEmphasis
+  - original_glszm_SizeZoneNonUniformity
+  - original_glszm_SizeZoneNonUniformityNormalized
+  - original_glszm_SmallAreaEmphasis
+  - original_glszm_SmallAreaHighGrayLevelEmphasis
+  - original_glszm_SmallAreaLowGrayLevelEmphasis
+  - original_glszm_ZoneEntropy
+  - original_glszm_ZonePercentage
+  - original_glszm_ZoneVariance
+  - original_glrlm_GrayLevelNonUniformity
+  - original_glrlm_GrayLevelNonUniformityNormalized
+  - original_glrlm_GrayLevelVariance
+  - original_glrlm_HighGrayLevelRunEmphasis
+  - original_glrlm_LongRunEmphasis
+  - original_glrlm_LongRunHighGrayLevelEmphasis
+  - original_glrlm_LongRunLowGrayLevelEmphasis
+  - original_glrlm_LowGrayLevelRunEmphasis
+  - original_glrlm_RunEntropy
+  - original_glrlm_RunLengthNonUniformity
+  - original_glrlm_RunLengthNonUniformityNormalized
+  - original_glrlm_RunPercentage
+  - original_glrlm_RunVariance
+  - original_glrlm_ShortRunEmphasis
+  - original_glrlm_ShortRunHighGrayLevelEmphasis
+  - original_glrlm_ShortRunLowGrayLevelEmphasis
