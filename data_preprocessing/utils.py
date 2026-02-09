@@ -1,7 +1,6 @@
 
 import json
 import yaml
-import SimpleITK as sitk
 
 
 def read_json(file_path):
@@ -14,6 +13,7 @@ def save_to_json(data, file_path):
         json.dump(data, f, indent=4)
 
 def read_3d_volume(img_path):
+    import SimpleITK as sitk
     img = sitk.ReadImage(img_path)
     return img
 

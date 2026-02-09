@@ -46,10 +46,22 @@ def collate_fn(batch):
     def to_float_tensor(x):
         if isinstance(x, torch.Tensor):
             return x.float()
-        if isinstance(x, np.ndarray):
-            return torch.from_numpy(x).float()
-        # list -> tensor
-        return torch.tensor(x, dtype=torch.float32)
+
+        x = np.asarray(x)
+
+        # Case 1: strings representing complex numbers
+        if x.dtype.kind in ("U", "S", "O"):
+            x = np.array([complex(v).real for v in x.reshape(-1)], dtype=np.float32).reshape(x.shape)
+
+        # Case 2: actual complex dtype
+        elif np.iscomplexobj(x):
+            x = np.real(x).astype(np.float32, copy=False)
+
+        else:
+            x = x.astype(np.float32, copy=False)
+
+        return torch.from_numpy(x)
+
 
     def to_long_tensor(x):
         if isinstance(x, torch.Tensor):
@@ -91,6 +103,13 @@ def collate_fn(batch):
     # -------------------------
     # Collect per-patient items
     # -------------------------
+
+    # for item in batch:
+    #     pid = item.get("patient_id", None)
+    #     ff = item['followup_img_features']
+    #     print(f"PID: {pid}, Follow-up features shape: {ff.shape}")
+    #     _ = to_float_tensor(ff)  # test conversion to float tensor
+    
     pids = [item["patient_id"] for item in batch]
 
     base_feats = [to_float_tensor(item["base_img_features"]) for item in batch]
@@ -143,6 +162,25 @@ def collate_fn(batch):
         "clinical_info": clinical_info,
     }
 
+
+def print_label_statistics(prepared_dataset):
+    early_response_labels = []
+    overall_survival_labels = []
+
+    for i in range(len(prepared_dataset)):
+        item = prepared_dataset[i]
+        early_response_labels.append(int(item["early_response"]))
+        overall_survival_labels.append(int(item["overall_survival_24m"]))
+
+    er_series = pd.Series(early_response_labels)
+    os_series = pd.Series(overall_survival_labels)
+
+    print("Early Response Label Distribution:")
+    print(er_series.value_counts())
+    print("\nOverall Survival 24m Label Distribution:")
+    print(os_series.value_counts())
+
+
 def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx):
     data_config = read_yaml(data_config_dir)
     excel_path = data_config["excel_path"]
@@ -155,9 +193,12 @@ def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_t
     matched_train_df, matched_val_df, matched_test_df = match_excel_splits_with_imgroups(excel_table, fold_img_groups)  
     print(f"Fold {fold_idx}: Train={len(matched_train_df)}, Val={len(matched_val_df)}, Test={len(matched_test_df)}")
     dataset_train = FastCustomDataset(matched_train_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
+    print_label_statistics(dataset_train)
     dataset_val = FastCustomDataset(matched_val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
+    print_label_statistics(dataset_val)
     dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
-
+    print_label_statistics(dataset_test)
+    
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=10, collate_fn=collate_fn)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)
     test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)

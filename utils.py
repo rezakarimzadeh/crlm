@@ -61,7 +61,7 @@ def read_json(file_path: str) -> dict:
 
 def test_model(model, test_loader):
         model.eval()
-        output = {"overall_survival": {"y_true": [], "y_pred": [], "y_prob": []}, "early_response": {"y_true": [], "y_pred": [], "y_prob": []}}
+        output = {"early_response": {"y_true": [], "y_pred": [], "y_prob": []}}
         try:
             device = model.device
         except:
@@ -69,18 +69,18 @@ def test_model(model, test_loader):
         with torch.no_grad():
             for batch in test_loader:
                 logits = model(batch)
-                survival_logits = logits['survival']
+                # survival_logits = logits['survival']
                 early_response_logits = logits['early_response']
 
-                survival_probs = torch.softmax(survival_logits, dim=1)[:, 1]
+                # survival_probs = torch.softmax(survival_logits, dim=1)[:, 1]
                 early_response_probs = torch.softmax(early_response_logits, dim=1)[:, 1]
 
-                survival_preds = torch.argmax(survival_logits, dim=1)
+                # survival_preds = torch.argmax(survival_logits, dim=1)
                 early_response_preds = torch.argmax(early_response_logits, dim=1)
 
-                output["overall_survival"]["y_pred"].extend(survival_preds.cpu().numpy())
-                output["overall_survival"]["y_prob"].extend(survival_probs.cpu().numpy())
-                output["overall_survival"]["y_true"].extend(batch['targets']['overall_survival_24m'].cpu().numpy())
+                # output["overall_survival"]["y_pred"].extend(survival_preds.cpu().numpy())
+                # output["overall_survival"]["y_prob"].extend(survival_probs.cpu().numpy())
+                # output["overall_survival"]["y_true"].extend(batch['targets']['overall_survival_24m'].cpu().numpy())
 
                 output["early_response"]["y_pred"].extend(early_response_preds.cpu().numpy())
                 output["early_response"]["y_prob"].extend(early_response_probs.cpu().numpy())

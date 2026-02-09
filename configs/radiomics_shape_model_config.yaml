@@ -2,11 +2,14 @@
 radiomics_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/05_radiomics_features
 extra_shape_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/06_extra_shape_features
 batch_size: 32
-num_workers: 10
-lr: 0.05
+num_workers: 6
+lr: 0.01
 max_epochs: 100
 
-# Core Shape & Size
+# ============================================================
+# Radiomics feature groups for CRLM treatment-response studies
+# ============================================================
+
 shape:
   - original_shape_Elongation
   - original_shape_Flatness
@@ -25,8 +28,8 @@ shape:
   - lesion_voxels
   - lesion_volume_mm3
 
-# Boundary / Invasion / Rim Phenotype (Very High Value)
 boundary:
+  # EDT-based boundary geometry
   - extra_edt_mean_mm
   - extra_edt_std_mm
   - extra_edt_max_mm
@@ -35,6 +38,7 @@ boundary:
   - extra_edt_q50_mm
   - extra_edt_q75_mm
   - extra_edt_q90_mm
+
   - extra_edt_interior_mean_mm
   - extra_edt_interior_std_mm
   - extra_edt_interior_max_mm
@@ -43,6 +47,8 @@ boundary:
   - extra_edt_interior_q50_mm
   - extra_edt_interior_q75_mm
   - extra_edt_interior_q90_mm
+
+  # Rim / radial / solidity
   - extra_edt_zero_frac
   - extra_rim1mm_frac
   - extra_rim2mm_frac
@@ -54,8 +60,16 @@ boundary:
   - extra_hull_area_mm2
   - extra_solidity
 
-# First-Order Intensity (Necrosis / Viability)
-firstorder:
+  # Rim intensity gradient
+  - extra_grad_rim1mm_mean
+  - extra_grad_rim1mm_std
+  - extra_grad_rim1mm_q10
+  - extra_grad_rim1mm_q25
+  - extra_grad_rim1mm_q50
+  - extra_grad_rim1mm_q75
+  - extra_grad_rim1mm_q90
+
+intensity:
   - original_firstorder_10Percentile
   - original_firstorder_90Percentile
   - original_firstorder_Energy
@@ -75,8 +89,8 @@ firstorder:
   - original_firstorder_Uniformity
   - original_firstorder_Variance
 
-# GLCM features (Texture - Gray Level Co-occurrence Matrix) (Local Texture / Micro-heterogeneity)
-glcm:
+texture:
+  # GLCM
   - original_glcm_Autocorrelation
   - original_glcm_ClusterProminence
   - original_glcm_ClusterShade
@@ -102,8 +116,7 @@ glcm:
   - original_glcm_SumEntropy
   - original_glcm_SumSquares
 
-# GLSZM and GLRLM features ((Run-Length / Structural Patterns) and (Regional Zone Patterns))
-glszm_glrlm:
+  # GLSZM
   - original_glszm_GrayLevelNonUniformity
   - original_glszm_GrayLevelNonUniformityNormalized
   - original_glszm_GrayLevelVariance
@@ -120,6 +133,8 @@ glszm_glrlm:
   - original_glszm_ZoneEntropy
   - original_glszm_ZonePercentage
   - original_glszm_ZoneVariance
+
+  # GLRLM
   - original_glrlm_GrayLevelNonUniformity
   - original_glrlm_GrayLevelNonUniformityNormalized
   - original_glrlm_GrayLevelVariance
@@ -136,3 +151,10 @@ glszm_glrlm:
   - original_glrlm_ShortRunEmphasis
   - original_glrlm_ShortRunHighGrayLevelEmphasis
   - original_glrlm_ShortRunLowGrayLevelEmphasis
+
+  # NGTDM
+  - original_ngtdm_Busyness
+  - original_ngtdm_Coarseness
+  - original_ngtdm_Complexity
+  - original_ngtdm_Contrast
+  - original_ngtdm_Strength

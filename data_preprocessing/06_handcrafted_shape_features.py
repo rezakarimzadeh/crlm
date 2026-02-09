@@ -15,6 +15,27 @@ except Exception:
 from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
 
+
+def clip_hu_for_radiomics(img: sitk.Image, hu_min: float = -200.0, hu_max: float = 300.0) -> sitk.Image:
+    """
+    Clip intensities to [hu_min, hu_max] without rescaling.
+    Keeps values in HU-like units (important if you insist on windowing for radiomics).
+    Output type matches input type.
+    """
+    in_id = img.GetPixelID()
+    img_f = sitk.Cast(img, sitk.sitkFloat32)
+
+    clipped = sitk.Clamp(img_f, lowerBound=float(hu_min), upperBound=float(hu_max))
+
+    return sitk.Cast(clipped, in_id)
+
+
+def clip_hu_ww_wl_for_radiomics(img: sitk.Image, ww, wl) -> sitk.Image:
+    hu_min = wl - ww / 2.0
+    hu_max = wl + ww / 2.0
+    return clip_hu_for_radiomics(img, hu_min=hu_min, hu_max=hu_max)
+
+
 def _binary_for_label(msk: sitk.Image, label: int) -> sitk.Image:
     """Return binary mask (UInt8) for one label."""
     return sitk.Cast(msk == int(label), sitk.sitkUInt8)
@@ -77,9 +98,6 @@ def _phys_coords_from_mask(mask_u8: sitk.Image, max_points: int = 20000) -> np.n
         px, py, pz = mask_u8.TransformIndexToPhysicalPoint((int(x), int(y), int(z)))
         pts[i] = (px, py, pz)
     return pts
-
-
-
 
 
 def compute_extra_shape_boundary_features(
@@ -200,6 +218,7 @@ def compute_extra_shape_boundary_features(
         feats["extra_radial_max_min_ratio"] = np.nan
 
     # --- Gradient magnitude stats on 1mm rim; fallback to contour if rim empty ---
+    img = clip_hu_ww_wl_for_radiomics(img, ww=150, wl=60)
     grad = sitk.GradientMagnitude(img)
     grad_arr = sitk.GetArrayFromImage(grad)
 
@@ -283,6 +302,12 @@ def extract_lesion_shape_features(
     min_voxels: int = 50,
     out_csv_path: str = None,
 ):
+
+    # if file exists, skip (can be used to resume)
+    _out_csv_path = Path(out_csv_path)
+    if _out_csv_path.is_file():
+        print(f"Output {_out_csv_path} exists, skipping.")
+        return
     img = sitk.ReadImage(ct_path)
     msk = sitk.ReadImage(mask_path)
     # check if mask has values
@@ -364,7 +389,7 @@ def main(data_config_dir):
         # )
         # exit()
     
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=12) as executor:
         list(tqdm(executor.map(perform_one_extraction, tasks), total=len(tasks)))
         
 if __name__ == "__main__":

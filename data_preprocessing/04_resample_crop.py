@@ -1,3 +1,4 @@
+import math
 import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
@@ -36,20 +37,21 @@ def resample_img_seg(img, new_spacing, is_label=False):
 
 
 def crop_img_seg(img, seg, crop_dimensions_mm):
-    # find the center of the segmentation
     seg_array = sitk.GetArrayFromImage(seg)
     z_indices, y_indices, x_indices = seg_array.nonzero()
+
     z_center = int((z_indices.min() + z_indices.max()) / 2)
     y_center = int((y_indices.min() + y_indices.max()) / 2)
     x_center = int((x_indices.min() + x_indices.max()) / 2)
-    center_index = [x_center, y_center, z_center]  # Note the order: x, y, z
-    # calculate the crop size in voxels
-    spacing = img.GetSpacing()
+    center_index = [x_center, y_center, z_center]  # x,y,z
+
+    spacing = img.GetSpacing()  # x,y,z
+
     crop_size_voxels = [
-        int(crop_dimensions_mm[i] / spacing[i])
+        max(1, int(math.ceil(crop_dimensions_mm[i] / spacing[i])))
         for i in range(3)
     ]
-    # calculate the start and end indices for cropping
+
     start_index = [
         max(0, center_index[i] - crop_size_voxels[i] // 2)
         for i in range(3)
@@ -58,17 +60,17 @@ def crop_img_seg(img, seg, crop_dimensions_mm):
         min(img.GetSize()[i], start_index[i] + crop_size_voxels[i])
         for i in range(3)
     ]
-    # adjust start index if end index is at the boundary
     for i in range(3):
         if end_index[i] - start_index[i] < crop_size_voxels[i]:
             start_index[i] = max(0, end_index[i] - crop_size_voxels[i])
-    # perform cropping
+
     roi_filter = sitk.RegionOfInterestImageFilter()
     roi_filter.SetSize([end_index[i] - start_index[i] for i in range(3)])
     roi_filter.SetIndex(start_index)
     cropped_img = roi_filter.Execute(img)
     cropped_seg = roi_filter.Execute(seg)
     return cropped_img, cropped_seg
+
 
 def marginal_crop_img_seg(img, seg, margin_mm):
     seg_array = sitk.GetArrayFromImage(seg)
@@ -80,8 +82,9 @@ def marginal_crop_img_seg(img, seg, margin_mm):
     y_min, y_max = int(y_indices.min()), int(y_indices.max())
     x_min, x_max = int(x_indices.min()), int(x_indices.max())
 
-    spacing = img.GetSpacing()  # (x,y,z)
-    margin_voxels = [int(margin_mm / spacing[i]) for i in range(3)]
+    spacing = img.GetSpacing()  # x,y,z
+
+    margin_voxels = [int(math.ceil(margin_mm / spacing[i])) for i in range(3)]
 
     x_min = max(0, x_min - margin_voxels[0])
     x_max = min(img.GetSize()[0] - 1, x_max + margin_voxels[0])
@@ -90,7 +93,7 @@ def marginal_crop_img_seg(img, seg, margin_mm):
     z_min = max(0, z_min - margin_voxels[2])
     z_max = min(img.GetSize()[2] - 1, z_max + margin_voxels[2])
 
-    start_index = [int(x_min), int(y_min), int(z_min)]  # ensure python int
+    start_index = [int(x_min), int(y_min), int(z_min)]
     size = [int(x_max - x_min + 1), int(y_max - y_min + 1), int(z_max - z_min + 1)]
 
     roi_filter = sitk.RegionOfInterestImageFilter()
@@ -105,9 +108,9 @@ def resample_and_crop(img, seg, resample_spacing_mm, crop_dimensions_mm, margina
     resampled_seg = resample_img_seg(seg, new_spacing=resample_spacing_mm, is_label=True)
     # crop with fixed size around center of segmentation
     # cropped_img, cropped_seg = crop_img_seg(resampled_img, resampled_seg, crop_dimensions_mm)
-    # marginal crop with 6 mm margin
+    # marginal crop with 10 mm margin
     if marginal_crop:
-        cropped_img, cropped_seg = marginal_crop_img_seg(resampled_img, resampled_seg, margin_mm=6.0)
+        cropped_img, cropped_seg = marginal_crop_img_seg(resampled_img, resampled_seg, margin_mm=10.0)
     else:
         cropped_img, cropped_seg = crop_img_seg(resampled_img, resampled_seg, crop_dimensions_mm)
     return cropped_img, cropped_seg
@@ -151,7 +154,7 @@ def main(data_config_dir, marginal_crop):
 
     output_dir = Path(data_config['preprocessed_data_base_dir'])
     if marginal_crop:
-        print("Using marginal cropping strategy with 6 mm margin.")
+        print("Using marginal cropping strategy with 10 mm margin.")
         output_images_dir = output_dir / "04_images_resampled_marginal_cropped"
         output_segmentations_dir = output_dir / "04_segmentations_resampled_marginal_cropped"
     else:
@@ -171,7 +174,7 @@ def main(data_config_dir, marginal_crop):
 
     # perform_one_case(tasks[100])  # for debugging
 
-    with ProcessPoolExecutor(max_workers=2) as executor:
+    with ProcessPoolExecutor(max_workers=1) as executor:
         list(tqdm(executor.map(perform_one_case, tasks), total=len(tasks)))
 
 if __name__ == "__main__":

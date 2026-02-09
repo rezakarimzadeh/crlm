@@ -222,7 +222,7 @@ def main(data_config_dir):
             # perform_one_case(tasks[0])  # for debugging
             # exit()
 
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=6) as executor:
         list(tqdm(executor.map(perform_one_case, tasks), total=len(tasks)))
 
 

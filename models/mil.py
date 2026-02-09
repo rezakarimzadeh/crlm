@@ -18,8 +18,11 @@ class AttentionMIL(nn.Module):
         self.ATTENTION_BRANCHES = 1
         
         self.BN = MaskedBatchNorm1d(input_dim)
+        self.attention_bn = MaskedBatchNorm1d(self.M)
         self.feature_extractor = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, self.M)
         )
@@ -32,8 +35,9 @@ class AttentionMIL(nn.Module):
 
     def forward(self, x, pad_mask, attention=False):
         x = self.BN(x, pad_mask)
-        # x: [B, T, F]
+        # x: [B, T, F] 
         H = self.feature_extractor(x)  # [B, T, H]
+        # H = self.attention_bn(H, pad_mask)
         A = self.attention(H).squeeze(-1)  # [B, T]
         # Apply mask before softmax
         A = A.masked_fill(pad_mask, float('-inf'))
@@ -49,11 +53,11 @@ class Classifier(nn.Module):
         super(Classifier, self).__init__()
 
         self.classifier = nn.Sequential(
-            # nn.BatchNorm1d(input_dim),
+            nn.BatchNorm1d(input_dim),
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.Dropout(0.5),
             nn.ReLU(),
+            # nn.Dropout(0.1),
             nn.Linear(hidden_dim, output_dim)
         )
 
@@ -67,13 +71,16 @@ class RadiomicsMIL(pl.LightningModule):
         dim = 128 #int((4/5)*features_dim)
         self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
-        self.overall_survival_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
+        # self.overall_survival_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
         self.early_response_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
 
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
-        self.max_epochs = config['max_epochs']  
-        self.criterion = nn.CrossEntropyLoss()
+        self.max_epochs = config['max_epochs']
+
+        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+        self.register_buffer("class_weights", class_weights)
+        self.criterion_early_response = nn.CrossEntropyLoss(weight=self.class_weights)
 
         # Metrics
         self.acc = BinaryAccuracy()
@@ -84,25 +91,28 @@ class RadiomicsMIL(pl.LightningModule):
         base_emb = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
         followup_emb = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
         combined_emb = torch.cat([base_emb - followup_emb, base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
-        logits_overall_survival = self.overall_survival_head(combined_emb)
+        # logits_overall_survival = self.overall_survival_head(combined_emb.detach()) # need detach to avoid gradients flowing to both heads
         logits_early_response = self.early_response_head(combined_emb)
-        logits = {"survival": logits_overall_survival, "early_response": logits_early_response}
+        logits = {"early_response": logits_early_response} #"survival": logits_overall_survival, 
         return logits
 
     def _shared_step(self, batch, stage):
         logits = self(batch)
-        gt_survival = batch["targets"]["overall_survival_24m"].long()
+        # gt_survival = batch["targets"]["overall_survival_24m"].long()
+        
         gt_early_response = batch["targets"]["early_response"].long()
-        loss = self.criterion(logits["survival"], gt_survival) + self.criterion(logits["early_response"], gt_early_response)
-        y_hat_survival = torch.argmax(logits["survival"], dim=1)
+        loss = self.criterion_early_response(logits["early_response"], gt_early_response)
+        # y_hat_survival = torch.argmax(logits["early_response"], dim=1)
+        prob_survival = torch.softmax(logits["early_response"], dim=1)[:, 1]
         y_hat_response = torch.argmax(logits["early_response"], dim=1)
         self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
-        self.log(f"{stage}_overall_survival_acc", self.acc(y_hat_survival, gt_survival), prog_bar=False)
-        self.log(f"{stage}_overall_survival_auroc", self.auroc(y_hat_survival, gt_survival), prog_bar=True)
-        self.log(f"{stage}_overall_survival_f1", self.f1(y_hat_survival, gt_survival), prog_bar=False)
+        
+        # self.log(f"{stage}_overall_survival_acc", self.acc(y_hat_survival, gt_survival), prog_bar=False)
+        # self.log(f"{stage}_overall_survival_auroc", self.auroc(y_hat_survival, gt_survival), prog_bar=True)
+        # self.log(f"{stage}_overall_survival_f1", self.f1(y_hat_survival, gt_survival), prog_bar=False)
         
         self.log(f"{stage}_early_response_acc", self.acc(y_hat_response, gt_early_response), prog_bar=False)
-        self.log(f"{stage}_early_response_auroc", self.auroc(y_hat_response, gt_early_response), prog_bar=True)
+        self.log(f"{stage}_early_response_auroc", self.auroc(prob_survival, gt_early_response), prog_bar=True)
         self.log(f"{stage}_early_response_f1", self.f1(y_hat_response, gt_early_response), prog_bar=False)
         return loss
     
@@ -122,6 +132,7 @@ class RadiomicsMIL(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        # return optimizer
         scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
         return [optimizer], [scheduler]
 

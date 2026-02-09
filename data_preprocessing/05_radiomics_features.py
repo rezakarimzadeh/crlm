@@ -33,14 +33,26 @@ def lesion_volume_mm3(mask, label: int) -> float:
     sx, sy, sz = mask.GetSpacing()  # (x,y,z)
     return float(n * sx * sy * sz)
 
-def build_extractor(bin_width=25):
+
+def build_extractor(bin_width, spacing=(1, 1, 1)):
     params = {
         "setting": {
+            # --- resampling ---
             "resampledPixelSpacing": None,
+
+            # --- discretization ---
             "binWidth": float(bin_width),
+
+            # --- misc ---
             "normalize": False,
             "correctMask": True,
-            "geometryTolerance": 1e-3,
+            "geometryTolerance": 1e-6,
+            "label": 1,
+
+            # optional speed-up / ROI handling
+            "preCrop": True,
+            "padDistance": 5,
+            "force2D": False,
         },
         "imageType": {"Original": {}},
         "featureClass": {
@@ -49,36 +61,59 @@ def build_extractor(bin_width=25):
             "glcm": [],
             "glszm": [],
             "glrlm": [],
+            "ngtdm": [],
         },
     }
     return featureextractor.RadiomicsFeatureExtractor(params)
 
 
+def clip_hu_for_radiomics(img: sitk.Image, hu_min: float = -200.0, hu_max: float = 300.0) -> sitk.Image:
+    """
+    Clip intensities to [hu_min, hu_max] without rescaling.
+    Keeps values in HU-like units (important if you insist on windowing for radiomics).
+    Output type matches input type.
+    """
+    in_id = img.GetPixelID()
+    img_f = sitk.Cast(img, sitk.sitkFloat32)
+
+    clipped = sitk.Clamp(img_f, lowerBound=float(hu_min), upperBound=float(hu_max))
+
+    return sitk.Cast(clipped, in_id)
+
+def clip_hu_ww_wl_for_radiomics(img: sitk.Image, ww, wl) -> sitk.Image:
+    hu_min = wl - ww / 2.0
+    hu_max = wl + ww / 2.0
+    return clip_hu_for_radiomics(img, hu_min=hu_min, hu_max=hu_max)
+
+
+def array_to_sitk_image(array, reference_sitk_image):
+    sitk_image = sitk.GetImageFromArray(array)
+    sitk_image.CopyInformation(reference_sitk_image)
+    return sitk_image
 
 
 def extract_lesion_radiomics(
     ct_path: str,
     mask_path: str,
-    bin_width: int = 25,
+    bin_width: int,
     min_voxels: int = 50,
     out_csv_path: str = None,
 ):
     img = sitk.ReadImage(ct_path)
     msk = sitk.ReadImage(mask_path)
-    # check if mask has values
-    arr_mask = sitk.GetArrayFromImage(msk)
-    if np.sum(arr_mask) == 0:
-        return 
-    # Ensure mask is on image grid
+
+    # Ensure mask is on image grid first
     if not same_geometry(img, msk):
         msk = resample_mask_to_image(msk, img)
 
-    arr = sitk.GetArrayFromImage(msk)
-    labels = [int(x) for x in np.unique(arr) if int(x) != 0]
-    if len(labels) == 0:
-        return
-        # raise ValueError("No lesion labels found in mask (all zeros).")
+    # (Optional) clip image for visualization-like HU truncation
+    img = clip_hu_ww_wl_for_radiomics(img, ww=150, wl=60)
 
+    arr = sitk.GetArrayFromImage(msk)
+    if not np.any(arr > 0):
+        return
+
+    labels = [int(x) for x in np.unique(arr) if int(x) != 0]
     extractor = build_extractor(bin_width=bin_width)
 
     lesion_rows = []
@@ -88,22 +123,23 @@ def extract_lesion_radiomics(
             continue
 
         vol_mm3 = lesion_volume_mm3(msk, lab)
-
-        # Execute radiomics for this label
-        out = extractor.execute(img, msk, label=lab)
+        label_mask = (arr == lab).astype(np.uint8)
+        unified_mask_sitk = array_to_sitk_image(label_mask, msk)
+        out = extractor.execute(img, unified_mask_sitk)
         feats = {k: v for k, v in out.items() if not k.startswith("diagnostics")}
 
-        # Add metadata
         feats["lesion_label"] = lab
         feats["lesion_voxels"] = nvox
         feats["lesion_volume_mm3"] = vol_mm3
         lesion_rows.append(feats)
 
-    if len(lesion_rows) == 0:
+    if not lesion_rows:
         raise ValueError(f"All lesions were below min_voxels={min_voxels}.")
+
 
     df_lesions = pd.DataFrame(lesion_rows)
     df_lesions.to_csv(out_csv_path, index=False)
+    return df_lesions
 
 
 def perform_one_extraction(args):
@@ -129,7 +165,9 @@ def main(data_config_dir):
 
     seg_paths = sorted(list(seg_base_dir.rglob("*.nii.gz")))
     img_paths = sorted(list(ct_base_dir.rglob("*.nii")))
-
+    # filter imgs based on seg names
+    # seg_ids = list([p.name.split(".nii.gz")[0] for p in seg_paths])
+    # img_paths = [Path(ct_base_dir) / f"{id}_0000.nii.gz" for id in seg_ids]
     # sanity check
     print(f"Found {len(img_paths)} images and {len(seg_paths)} segmentations.")
     assert len(img_paths) == len(seg_paths), "Number of images and segmentations do not match."
