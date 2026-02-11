@@ -107,7 +107,8 @@ def extract_lesion_radiomics(
         msk = resample_mask_to_image(msk, img)
 
     # (Optional) clip image for visualization-like HU truncation
-    img = clip_hu_ww_wl_for_radiomics(img, ww=150, wl=60)
+    # img = clip_hu_ww_wl_for_radiomics(img, ww=400, wl=50)
+    img = clip_hu_for_radiomics(img, hu_min=-150, hu_max=250)
 
     arr = sitk.GetArrayFromImage(msk)
     if not np.any(arr > 0):
@@ -177,7 +178,7 @@ def main(data_config_dir):
     for ct_path, seg_path in zip(img_paths, seg_paths):
         img_id = ct_path.name
         out_csv_path = output_dir / f"{img_id.replace('.nii', '_radiomics.csv')}"
-        tasks.append((str(ct_path), str(seg_path), data_config.get("radiomics_bin_width", 25), data_config.get("radiomics_min_voxels", 50), str(out_csv_path)))
+        tasks.append((str(ct_path), str(seg_path), data_config.get("radiomics_bin_width", 15), data_config.get("radiomics_min_voxels", 50), str(out_csv_path)))
         # try:
         #     df_lesions = extract_lesion_radiomics(
         #         str(ct_path),
@@ -191,7 +192,7 @@ def main(data_config_dir):
         #     print(f"Error processing {img_id}: {e}")
         # exit()
     
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=6) as executor:
         list(tqdm(executor.map(perform_one_extraction, tasks), total=len(tasks)))
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'

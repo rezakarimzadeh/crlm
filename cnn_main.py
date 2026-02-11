@@ -27,13 +27,17 @@ def get_model_class(model_name: str):
 def train_dl_model(args, fold_index: int):
     data_config_dir = args.data_config_dir
     model_config_dir = args.model_config_dir
+    target_key = args.target_key
+
     model_config = read_yaml(model_config_dir)
     model_name = args.model_name
     train_loader, val_loader, test_loader = get_cnn_dataloaders(data_config_dir, model_config_dir, fold_index)
-
+    # define input dimension
+    sample_batch = next(iter(train_loader))
+    demographic_dim = sample_batch['demographic_info'].shape[-1]
 
     MODEL_CLASS = get_model_class(model_name)
-    model = MODEL_CLASS(config_dir=model_config_dir)
+    model = MODEL_CLASS(demographic_dim=demographic_dim, config_dir=model_config_dir, target_key=target_key)
   
     ckpt = ModelCheckpoint(
         monitor="val_loss",
@@ -43,7 +47,7 @@ def train_dl_model(args, fold_index: int):
         filename="best",     
         auto_insert_metric_name=False,
     )
-    log_name = f"{model_name}"
+    log_name = f"{model_name}/{target_key}"
 
     save_dir = Path("Results") / log_name / f"fold_{fold_index}"
     if save_dir.exists():
@@ -68,16 +72,12 @@ def train_dl_model(args, fold_index: int):
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
     print(f"Best checkpoint: {ckpt.best_model_path}")
     #  Test
-    best_model = MODEL_CLASS.load_from_checkpoint(ckpt.best_model_path, config_dir=model_config_dir)
-    test_output = test_model(best_model, test_loader)
-    # overall_survival_classification_metrics = compute_classification_metrics("overall_survival", test_output)
-    early_response_classification_metrics = compute_classification_metrics("early_response", test_output)
-    # fold_results = {"overall_survival": overall_survival_classification_metrics, "early_response": early_response_classification_metrics}
-    fold_results = {"early_response": early_response_classification_metrics}
+    best_model = MODEL_CLASS.load_from_checkpoint(ckpt.best_model_path, demographic_dim=demographic_dim, config_dir=model_config_dir, target_key=target_key, weights_only=False)
+    test_output = test_model(best_model, test_loader, target_key)
+    classification_metrics = compute_classification_metrics(test_output)
 
     fold_results = {'fold': fold_index, 
-                    # "overall_survival_classification_metrics": overall_survival_classification_metrics, 
-                    "early_response_classification_metrics": early_response_classification_metrics, 
+                    "classification_metrics": classification_metrics, 
                     'best_checkpoint': ckpt.best_model_path,
                     **test_output}
 
@@ -87,7 +87,6 @@ def train_dl_model(args, fold_index: int):
 
 
 def fivefold_cv(args):
-    os_rows = []
     er_rows = []
     model_save_path_last = None
 
@@ -95,13 +94,9 @@ def fivefold_cv(args):
         results, model_save_path = train_dl_model(args, fold_idx)
         model_save_path_last = model_save_path
 
-        # os_metrics = results["overall_survival_classification_metrics"]
-        er_metrics = results["early_response_classification_metrics"]
-        # convert numpy scalars to python floats
-        # os_rows.append({k: float(v) for k, v in os_metrics.items()})
+        er_metrics = results["classification_metrics"]
         er_rows.append({k: float(v) for k, v in er_metrics.items()})
 
-    df_os = pd.DataFrame(os_rows)
     df_er = pd.DataFrame(er_rows)
 
     def aggregate(df):
@@ -113,22 +108,19 @@ def fivefold_cv(args):
             for c in df.columns
         }
 
-    os_agg = aggregate(df_os)
     er_agg = aggregate(df_er)
 
-    out = {
-        "overall_survival": os_agg,
-        "early_response": er_agg,
-    }
 
-    save_json(model_save_path_last / "fivefold_aggregated_results.json", out)
+
+    save_json(model_save_path_last / "fivefold_aggregated_results.json", er_agg)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Train and evaluate models with 5-fold cross-validation.")
     parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
     parser.add_argument("--model_config_dir", type=str, default="./configs/cnn_config.yaml", help="model config file path.")
-    parser.add_argument("--model_name", type=str, default="CnnConcatenation", choices=["CnnConcatenation", "CnnSiamese"], help="model name to use.")
+    parser.add_argument("--model_name", type=str, default="CnnSiamese", choices=["CnnConcatenation", "CnnSiamese"], help="model name to use.")
+    parser.add_argument("--target_key", type=str, default="early_recurrence", choices=["early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
 
     args = parser.parse_args()
     fivefold_cv(args)

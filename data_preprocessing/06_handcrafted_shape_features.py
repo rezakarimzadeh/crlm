@@ -218,7 +218,9 @@ def compute_extra_shape_boundary_features(
         feats["extra_radial_max_min_ratio"] = np.nan
 
     # --- Gradient magnitude stats on 1mm rim; fallback to contour if rim empty ---
-    img = clip_hu_ww_wl_for_radiomics(img, ww=150, wl=60)
+    # img = clip_hu_ww_wl_for_radiomics(img, ww=150, wl=60)
+    img = clip_hu_for_radiomics(img, hu_min=-150, hu_max=250)
+
     grad = sitk.GradientMagnitude(img)
     grad_arr = sitk.GetArrayFromImage(grad)
 

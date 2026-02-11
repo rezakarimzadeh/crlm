@@ -66,6 +66,7 @@ class CustomDataset(Dataset):
         sex_map = { 'Female': 0, 'Male': 1 }
         who_map = { 0:0, 1:1, 2:2}
         early_response_map = { 0:0, 1:1}
+        recist_cario5_map = {"Stable": 0, "Response": 1, "Progression": 0}
         
         aggregated_data = []
         print("Aggregating radiomics and shape features for all patients...")
@@ -88,7 +89,8 @@ class CustomDataset(Dataset):
                                      "early_response": early_response_map.get(row['ER (1 = yes, 0 = no)'], 0),
                                      "overall_survival_24m": overall_survival,
                                      "demographic_info": demographic_info,
-                                     "all clinical_info": row.to_dict()
+                                     "all clinical_info": row.to_dict(),
+                                     "recist_cario5": recist_cario5_map.get(row['FU1 RECIST CAIRO5'], -1)
                                       })
             print(f"Processed patient {patient_id}, early_response: {row['ER (1 = yes, 0 = no)']}, overall_survival_24m: {overall_survival}")
         return aggregated_data  
@@ -286,10 +288,12 @@ class FastCustomDataset(Dataset):
         df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
         df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
 
-        df["early_response"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
+        df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
 
         osm = pd.to_numeric(df["OSm"], errors="coerce")
         df["overall_survival_24m"] = (osm > 24).fillna(False).astype(int)
+
+        df["recist_cario5_enc"] = df["FU1 RECIST CAIRO5"].map({"Stable": 0, "Response": 1, "Progression": 0}).fillna(-1).astype(int)
 
         rows = df.to_dict(orient="records")
         out_rows = []
@@ -298,10 +302,11 @@ class FastCustomDataset(Dataset):
             out_rows.append(
                 {
                     "patient_id": r["patient_id"],
-                    "early_response": r["early_response"],
+                    "early_recurrence": r["early_recurrence"],
                     "overall_survival_24m": r["overall_survival_24m"],
                     "demographic_info": demographic_info,
                     "all_clinical_info": r,
+                    "recist_cario5": r["recist_cario5_enc"],
                 }
             )
         return out_rows
@@ -326,10 +331,11 @@ class FastCustomDataset(Dataset):
                 "base_lesion_labels": output["base_lesion_labels"],
                 "followup_img_features": output["followup_img_features"],
                 "followup_lesion_labels": output["followup_lesion_labels"],
-                "early_response": r["early_response"],
+                "early_recurrence": r["early_recurrence"],
                 "overall_survival_24m": r["overall_survival_24m"],
                 "demographic_info": r["demographic_info"],
                 "all clinical_info": r["all_clinical_info"],
+                "recist_cario5": r["recist_cario5"],
             }
 
         # Threads: good for CSV IO. If you see slowdown on /mnt/l, reduce to 4-8.

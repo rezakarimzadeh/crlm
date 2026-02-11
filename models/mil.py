@@ -58,21 +58,25 @@ class Classifier(nn.Module):
             nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
             # nn.Dropout(0.1),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Linear(hidden_dim, hidden_dim//2),
+            # nn.BatchNorm1d(hidden_dim//2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim//2, output_dim)
         )
 
     def forward(self, x):
         return self.classifier(x)
 
 class RadiomicsMIL(pl.LightningModule):
-    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str):
+    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str, target_key: str):
         super(RadiomicsMIL, self).__init__()
         self.save_hyperparameters()
-        dim = 128 #int((4/5)*features_dim)
+        dim = 256 #int((4/5)*features_dim)
         self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
-        # self.overall_survival_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
-        self.early_response_head = Classifier(input_dim=3*dim+demographic_dim, hidden_dim=dim//2, output_dim=2)
+        self.classifier_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2)
+
+        self.target_key = target_key
 
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
@@ -80,7 +84,7 @@ class RadiomicsMIL(pl.LightningModule):
 
         class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
         self.register_buffer("class_weights", class_weights)
-        self.criterion_early_response = nn.CrossEntropyLoss(weight=self.class_weights)
+        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
 
         # Metrics
         self.acc = BinaryAccuracy()
@@ -90,30 +94,23 @@ class RadiomicsMIL(pl.LightningModule):
     def forward(self, batch):
         base_emb = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
         followup_emb = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
-        combined_emb = torch.cat([base_emb - followup_emb, base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
-        # logits_overall_survival = self.overall_survival_head(combined_emb.detach()) # need detach to avoid gradients flowing to both heads
-        logits_early_response = self.early_response_head(combined_emb)
-        logits = {"early_response": logits_early_response} #"survival": logits_overall_survival, 
+        combined_emb = torch.cat([base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
+        logits = self.classifier_head(combined_emb)
         return logits
 
     def _shared_step(self, batch, stage):
         logits = self(batch)
-        # gt_survival = batch["targets"]["overall_survival_24m"].long()
         
-        gt_early_response = batch["targets"]["early_response"].long()
-        loss = self.criterion_early_response(logits["early_response"], gt_early_response)
-        # y_hat_survival = torch.argmax(logits["early_response"], dim=1)
-        prob_survival = torch.softmax(logits["early_response"], dim=1)[:, 1]
-        y_hat_response = torch.argmax(logits["early_response"], dim=1)
+        # gt_label = batch["targets"]["early_recurrence"].long()
+        gt_label = batch["targets"][self.target_key].long()
+
+        loss = self.criterion(logits, gt_label)
+        prob_survival = torch.softmax(logits, dim=1)[:, 1]
+        y_hat_response = torch.argmax(logits, dim=1)
         self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
-        
-        # self.log(f"{stage}_overall_survival_acc", self.acc(y_hat_survival, gt_survival), prog_bar=False)
-        # self.log(f"{stage}_overall_survival_auroc", self.auroc(y_hat_survival, gt_survival), prog_bar=True)
-        # self.log(f"{stage}_overall_survival_f1", self.f1(y_hat_survival, gt_survival), prog_bar=False)
-        
-        self.log(f"{stage}_early_response_acc", self.acc(y_hat_response, gt_early_response), prog_bar=False)
-        self.log(f"{stage}_early_response_auroc", self.auroc(prob_survival, gt_early_response), prog_bar=True)
-        self.log(f"{stage}_early_response_f1", self.f1(y_hat_response, gt_early_response), prog_bar=False)
+        self.log(f"{stage}_acc", self.acc(y_hat_response, gt_label), prog_bar=False)
+        self.log(f"{stage}_auroc", self.auroc(prob_survival, gt_label), prog_bar=True)
+        self.log(f"{stage}_f1", self.f1(y_hat_response, gt_label), prog_bar=False)
         return loss
     
     def get_attentions(self, batch):

@@ -59,9 +59,9 @@ def read_json(file_path: str) -> dict:
         data = json.load(f)
     return data
 
-def test_model(model, test_loader):
+def test_model(model, test_loader, target_key):
         model.eval()
-        output = {"early_response": {"y_true": [], "y_pred": [], "y_prob": []}}
+        output = {"y_true": [], "y_pred": [], "y_prob": []}
         try:
             device = model.device
         except:
@@ -69,28 +69,19 @@ def test_model(model, test_loader):
         with torch.no_grad():
             for batch in test_loader:
                 logits = model(batch)
-                # survival_logits = logits['survival']
-                early_response_logits = logits['early_response']
 
-                # survival_probs = torch.softmax(survival_logits, dim=1)[:, 1]
-                early_response_probs = torch.softmax(early_response_logits, dim=1)[:, 1]
+                probs = torch.softmax(logits, dim=1)[:, 1]
+                preds = torch.argmax(logits, dim=1)
 
-                # survival_preds = torch.argmax(survival_logits, dim=1)
-                early_response_preds = torch.argmax(early_response_logits, dim=1)
-
-                # output["overall_survival"]["y_pred"].extend(survival_preds.cpu().numpy())
-                # output["overall_survival"]["y_prob"].extend(survival_probs.cpu().numpy())
-                # output["overall_survival"]["y_true"].extend(batch['targets']['overall_survival_24m'].cpu().numpy())
-
-                output["early_response"]["y_pred"].extend(early_response_preds.cpu().numpy())
-                output["early_response"]["y_prob"].extend(early_response_probs.cpu().numpy())
-                output["early_response"]["y_true"].extend(batch['targets']['early_response'].cpu().numpy())
+                output["y_pred"].extend(preds.cpu().numpy())
+                output["y_prob"].extend(probs.cpu().numpy())
+                output["y_true"].extend(batch['targets'][target_key].cpu().numpy())
         return output
 
-def compute_classification_metrics(target_name, test_output):
-    y_true = np.array(test_output[target_name]["y_true"])
-    y_pred = np.array(test_output[target_name]["y_pred"])
-    y_prob = np.array(test_output[target_name]["y_prob"])
+def compute_classification_metrics(test_output):
+    y_true = np.array(test_output["y_true"])
+    y_pred = np.array(test_output["y_pred"])
+    y_prob = np.array(test_output["y_prob"])
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred)
     recall = recall_score(y_true, y_pred)

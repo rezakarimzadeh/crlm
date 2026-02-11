@@ -1,4 +1,4 @@
-hu_window: [-15, 135]
+hu_window: [-150, 250]
 resize: [192, 192, 192]
 batch_size: 4
 lr: 0.01

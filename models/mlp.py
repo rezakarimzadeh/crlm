@@ -18,11 +18,11 @@ class Classifier(nn.Module):
         self.classifier = nn.Sequential(
             nn.BatchNorm1d(input_dim),
             nn.Linear(input_dim, hidden_dim),
-            # nn.BatchNorm1d(hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
             # nn.Dropout(0.1),
             nn.Linear(hidden_dim, hidden_dim//2),
-            nn.BatchNorm1d(hidden_dim//2),
+            # nn.BatchNorm1d(hidden_dim//2),
             nn.ReLU(),
             nn.Linear(hidden_dim//2, output_dim)
         )
@@ -32,20 +32,23 @@ class Classifier(nn.Module):
 
 
 class StatisticalPoolingMLP(pl.LightningModule):
-    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str):
+    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str, target_key: str ):
         super(StatisticalPoolingMLP, self).__init__()
         self.save_hyperparameters()
+        self.target_key = target_key
         
-        input_dim = 3* 5 * features_dim  + demographic_dim # statistical pooling: mean, max, min, std, median
-        dim = 128 #int((4/5)*features_dim)
+        input_dim = 2 * 4 * features_dim  + demographic_dim # statistical pooling: mean, max, min, median
+        dim = 256 #int((4/5)*features_dim)
         
-        self.overall_survival_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=2)
-        self.early_response_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=2)
+        self.classifier_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=2)
 
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
         self.max_epochs = config['max_epochs']  
-        self.criterion = nn.CrossEntropyLoss()
+
+        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+        self.register_buffer("class_weights", class_weights)
+        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
 
         # Metrics
         self.acc = BinaryAccuracy()
@@ -56,7 +59,7 @@ class StatisticalPoolingMLP(pl.LightningModule):
         """
         x:        [B, T, F]
         pad_mask: [B, T]  True = padded
-        returns:  [B, 5F] concat(mean, max, min, std, median)
+        returns:  [B, 4F] concat(mean, max, min, median)
         """
         B, T, F = x.shape
         device = x.device
@@ -98,34 +101,25 @@ class StatisticalPoolingMLP(pl.LightningModule):
         x_nan = x.masked_fill(pad_mask.unsqueeze(-1), float("nan"))
         median = torch.nanmedian(x_nan, dim=1).values   # [B, F]
         median = torch.nan_to_num(median, nan=0.0)
-
-        return torch.cat([mean, maxv, minv, std, median], dim=1)  # [B, 5F]
+        return torch.cat([mean, maxv, minv, median], dim=1)  # [B, 4F]
 
 
     def forward(self, batch):
         base_emb = self._statistical_pooling(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
         followup_emb = self._statistical_pooling(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
-        combined_emb = torch.cat([base_emb - followup_emb, base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
-        logits_overall_survival = self.overall_survival_head(combined_emb)
-        logits_early_response = self.early_response_head(combined_emb)
-        logits = {"survival": logits_overall_survival, "early_response": logits_early_response}
+        combined_emb = torch.cat([base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
+        logits = self.classifier_head(combined_emb)
         return logits
 
     def _shared_step(self, batch, stage):
         logits = self(batch)
-        gt_survival = batch["targets"]["overall_survival_24m"].long()
-        gt_early_response = batch["targets"]["early_response"].long()
-        loss = self.criterion(logits["survival"], gt_survival) + self.criterion(logits["early_response"], gt_early_response)
-        y_hat_survival = torch.argmax(logits["survival"], dim=1)
-        y_hat_response = torch.argmax(logits["early_response"], dim=1)
+        gt_label = batch["targets"][self.target_key].long()
+        loss = self.criterion(logits, gt_label)
+        y_hat = torch.argmax(logits, dim=1)
         self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
-        self.log(f"{stage}_overall_survival_acc", self.acc(y_hat_survival, gt_survival), prog_bar=False)
-        self.log(f"{stage}_overall_survival_auroc", self.auroc(y_hat_survival, gt_survival), prog_bar=True)
-        self.log(f"{stage}_overall_survival_f1", self.f1(y_hat_survival, gt_survival), prog_bar=False)
-        
-        self.log(f"{stage}_early_response_acc", self.acc(y_hat_response, gt_early_response), prog_bar=False)
-        self.log(f"{stage}_early_response_auroc", self.auroc(y_hat_response, gt_early_response), prog_bar=True)
-        self.log(f"{stage}_early_response_f1", self.f1(y_hat_response, gt_early_response), prog_bar=False)
+        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), prog_bar=False)
+        self.log(f"{stage}_auroc", self.auroc(y_hat, gt_label), prog_bar=True)
+        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), prog_bar=False)
         return loss
     
     def training_step(self, batch, batch_idx):

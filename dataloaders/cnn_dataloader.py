@@ -43,11 +43,25 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
                 # add patient_id as a column
                 match = match.copy()
                 match['patient_id'] = patient_id
-                match['early_response'] = match['ER (1 = yes, 0 = no)'].astype(int)
+                match['early_recurrence'] = match['ER (1 = yes, 0 = no)'].astype(int)
                 match['overall_survival_24m'] = (match['OSm'] > 24).astype(int)
+                match['demographic_info'] = match[['mutstat_enc', 'sex_enc', 'who_enc', 'age_f']].values.tolist()
                 matched_rows.append(match)
         return pd.concat(matched_rows).reset_index(drop=True)
+    
+    mut_map = {
+        "BRAF mutation": 0,
+        "RAS & BRAF wildtype": 1,
+        "RAS mutation": 2,
+    }
+    sex_map = {"Female": 0, "Male": 1}
 
+    # Map / coerce
+    df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
+    df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
+    df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
+    df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
+    
     train_df = group_matched_indices(df, fold_img_groups['train'])
     val_df = group_matched_indices(df, fold_img_groups['val'])
     test_df = group_matched_indices(df, fold_img_groups['test'])
@@ -129,10 +143,15 @@ class VolumesDataset(Dataset):
     def _get_available_idxs(self, idx):
         sample = self.df.iloc[idx]
         case = {
+            # "base_img": os.path.join(self.preprocessed_data_base_dir,"08_images_resampled113_resized_192_192_128", f"{sample['patient_id']}_0_0000.nii.gz"),
+            # "followup_img": os.path.join(self.preprocessed_data_base_dir,"08_images_resampled113_resized_192_192_128", f"{sample['patient_id']}_1_0000.nii.gz"),
+
             "base_img": os.path.join(self.preprocessed_data_base_dir,"08_images_resampled113_resized_192_192_128", f"{sample['patient_id']}_0_0000.nii.gz"),
             "followup_img": os.path.join(self.preprocessed_data_base_dir,"08_images_resampled113_resized_192_192_128", f"{sample['patient_id']}_1_0000.nii.gz"),
-            "early_response": torch.tensor(sample['early_response']),
-            "overall_survival_24m": torch.tensor(sample['overall_survival_24m'])
+            "demographic_info": torch.tensor(sample['demographic_info']),  # Example demographic info, adjust as needed
+            "targets": {"early_recurrence": torch.tensor(sample['early_recurrence']),
+                        "overall_survival_24m": torch.tensor(sample['overall_survival_24m'])
+                        }
         }
         #  check if files exist
         if not os.path.exists(case["base_img"]) or not os.path.exists(case["followup_img"]):
@@ -149,7 +168,7 @@ class VolumesDataset(Dataset):
 
 def print_label_statistics(prepared_dataset_df):
     print("Label distribution:")
-    print(prepared_dataset_df["early_response"].value_counts())
+    print(prepared_dataset_df["early_recurrence"].value_counts())
     print(prepared_dataset_df["overall_survival_24m"].value_counts())
 
 
@@ -174,7 +193,7 @@ def get_cnn_dataloaders(data_config_dir, model_config_dir, fold_idx):
     dataset_val = VolumesDataset(matched_val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     dataset_test = VolumesDataset(matched_test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=8)
+    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
     test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
     return train_loader, val_loader, test_loader
@@ -186,7 +205,7 @@ def fn_test_loader(loader):
     print(f"Example batch keys: {list(sample_data.keys())}")
     print(f"Example base features shape: {sample_data['base_img'].shape}")
     print(f"Example follow-up features shape: {sample_data['followup_img'].shape}")
-    print(f"Example early response targets: {sample_data['early_response']}")
+    print(f"Example early recurrence targets: {sample_data['early_recurrence']}")
     print(f"Example overall survival 24m targets: {sample_data['overall_survival_24m']}")
     for batch in loader:
         print(f"Batch base features shape: {batch['base_img'].shape}")

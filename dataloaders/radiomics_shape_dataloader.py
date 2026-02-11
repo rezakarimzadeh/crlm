@@ -120,15 +120,18 @@ def collate_fn(batch):
 
     demographic_info = torch.stack([to_float_tensor(item["demographic_info"]) for item in batch], dim=0)
 
-    early_response = torch.tensor(
-        [int(item["early_response"]) for item in batch],
+    early_recurrence = torch.tensor(
+        [int(item["early_recurrence"]) for item in batch],
         dtype=torch.long
     )
     overall_survival_24m = torch.tensor(
         [int(item["overall_survival_24m"]) for item in batch],
         dtype=torch.long
     )
-
+    recist_cario5 = torch.tensor(
+        [int(item["recist_cario5"]) for item in batch],
+        dtype=torch.long
+    )
     # -------------------------
     # Pad base & follow-up sets
     # -------------------------
@@ -155,8 +158,9 @@ def collate_fn(batch):
 
         "demographic_info": demographic_info,      # [B, D]
         "targets": {
-            "early_response": early_response,      # [B]
+            "early_recurrence": early_recurrence,      # [B]
             "overall_survival_24m": overall_survival_24m,  # [B]
+            "recist_cario5": recist_cario5,        # [B]
         },
 
         "clinical_info": clinical_info,
@@ -164,21 +168,16 @@ def collate_fn(batch):
 
 
 def print_label_statistics(prepared_dataset):
-    early_response_labels = []
-    overall_survival_labels = []
+    early_recurrence_labels = []
 
     for i in range(len(prepared_dataset)):
         item = prepared_dataset[i]
-        early_response_labels.append(int(item["early_response"]))
-        overall_survival_labels.append(int(item["overall_survival_24m"]))
+        early_recurrence_labels.append(int(item["early_recurrence"]))  # or item["early_recurrence"] depending on which label you want to check
 
-    er_series = pd.Series(early_response_labels)
-    os_series = pd.Series(overall_survival_labels)
+    er_series = pd.Series(early_recurrence_labels)
 
-    print("Early Response Label Distribution:")
+    print("early Recurrence Label Distribution:")
     print(er_series.value_counts())
-    print("\nOverall Survival 24m Label Distribution:")
-    print(os_series.value_counts())
 
 
 def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx):
@@ -214,11 +213,12 @@ def fn_test_loader(loader):
     print(f"Example demographic info shape: {sample_data['demographic_info'].shape}")
     print(f"Example early response targets: {sample_data['targets']['early_response']}")
     print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
+    print(f"Example recist_cario5 targets: {sample_data['targets']['recist_cario5']}")
 
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'
     model_config_dir = '../configs/radiomics_shape_model_config.yaml'
     fold_idx = 0  # Example fold index
-    feature_to_include = ['shape', 'boundary', 'firstorder', 'glcm', 'glszm_glrlm']  # Example feature to include
+    feature_to_include = ['shape', 'boundary']  # Example feature to include
     train_loader, val_loader, test_loader = get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx)
     fn_test_loader(train_loader)
