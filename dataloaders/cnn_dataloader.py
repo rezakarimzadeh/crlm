@@ -205,8 +205,8 @@ def fn_test_loader(loader):
     print(f"Example batch keys: {list(sample_data.keys())}")
     print(f"Example base features shape: {sample_data['base_img'].shape}")
     print(f"Example follow-up features shape: {sample_data['followup_img'].shape}")
-    print(f"Example early recurrence targets: {sample_data['early_recurrence']}")
-    print(f"Example overall survival 24m targets: {sample_data['overall_survival_24m']}")
+    print(f"Example early recurrence targets: {sample_data['targets']['early_recurrence']}")
+    print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
     for batch in loader:
         print(f"Batch base features shape: {batch['base_img'].shape}")
         print(f"Batch follow-up features shape: {batch['followup_img'].shape}")
