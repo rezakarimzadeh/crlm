@@ -86,6 +86,9 @@ class GooglenetDataset(Dataset):
         
         def read_image(path):
             img = Image.open(path).convert("RGB")  # ensure 3 channels
+            # check if it is empty (0,0) and if so, replace with 224*224 black image
+            if img.size == (0, 0):
+                img = Image.new("RGB", (224, 224), color=(0, 0, 0))
             return img
         
         def get_diameter_from_filename(filename):
@@ -139,43 +142,72 @@ class GooglenetDataset(Dataset):
         }
         
 
+def _stack_or_empty(img_list, img_shape=(3, 224, 224), dtype=torch.float32):
+    if len(img_list) == 0:
+        return torch.empty((0, *img_shape), dtype=dtype)
+    # sanity: ensure all same shape
+    shapes = [tuple(x.shape) for x in img_list]
+    if len(set(shapes)) != 1:
+        raise RuntimeError(f"Image shape mismatch in collate: {shapes}")
+    return torch.stack(img_list)
 
 def custom_collate_fn(batch):
     collated_batch = {
         "patient_ids": [],
-        "base":{"img": [], "diameters": [], "batch_idxes": []},
-        "followup":{"img": [], "diameters": [], "batch_idxes": []},
-        "targets": {
-            "early_recurrence": [],
-            "overall_survival_24m": []
-        },
-        "demographic_info": []
+        "base": {"img": [], "diameters": [], "batch_idxes": []},
+        "followup": {"img": [], "diameters": [], "batch_idxes": []},
+        "targets": {"early_recurrence": [], "overall_survival_24m": []},
+        "demographic_info": [],
     }
 
     for i, item in enumerate(batch):
-        collated_batch["patient_ids"].extend([item["patient_id"]])
-        collated_batch["base"]["img"].extend(item["base"])
-        collated_batch["followup"]["img"].extend(item["followup"])
-        collated_batch["base"]["diameters"].extend(item["base_diameters"])
-        collated_batch["followup"]["diameters"].extend(item["followup_diameters"])
-        collated_batch["base"]["batch_idxes"].extend([i] * len(item["base"]))
-        collated_batch["followup"]["batch_idxes"].extend([i] * len(item["followup"]))
+        collated_batch["patient_ids"].append(item["patient_id"])
+
+        base_imgs = item["base"]              # list[Tensor] possibly empty
+        fol_imgs  = item["followup"]          # list[Tensor] possibly empty
+        base_d    = item["base_diameters"]    # list[float] same length as base_imgs
+        fol_d     = item["followup_diameters"]
+
+        # (optional but highly recommended) enforce alignment
+        if len(base_imgs) != len(base_d):
+            raise RuntimeError(f"base imgs/diameters length mismatch for {item['patient_id']}: "
+                               f"{len(base_imgs)} vs {len(base_d)}")
+        if len(fol_imgs) != len(fol_d):
+            raise RuntimeError(f"followup imgs/diameters length mismatch for {item['patient_id']}: "
+                               f"{len(fol_imgs)} vs {len(fol_d)}")
+
+        collated_batch["base"]["img"].extend(base_imgs)
+        collated_batch["followup"]["img"].extend(fol_imgs)
+
+        collated_batch["base"]["diameters"].extend(base_d)
+        collated_batch["followup"]["diameters"].extend(fol_d)
+
+        collated_batch["base"]["batch_idxes"].extend([i] * len(base_imgs))
+        collated_batch["followup"]["batch_idxes"].extend([i] * len(fol_imgs))
+
         collated_batch["targets"]["early_recurrence"].append(item["targets"]["early_recurrence"])
         collated_batch["targets"]["overall_survival_24m"].append(item["targets"]["overall_survival_24m"])
+
         collated_batch["demographic_info"].append(item["demographic_info"])
-    
-    # Stack images into tensors
-    collated_batch["base"]["img"] = torch.stack(collated_batch["base"]["img"])
-    collated_batch["followup"]["img"] = torch.stack(collated_batch["followup"]["img"])
-    collated_batch["base"]["diameters"] = torch.tensor(collated_batch["base"]["diameters"], dtype=torch.float32)
-    collated_batch["followup"]["diameters"] = torch.tensor(collated_batch["followup"]["diameters"], dtype=torch.float32)
-    collated_batch["base"]["batch_idxes"] = torch.tensor(collated_batch["base"]["batch_idxes"], dtype=torch.long)
-    collated_batch["followup"]["batch_idxes"] = torch.tensor(collated_batch["followup"]["batch_idxes"], dtype=torch.long)
-    collated_batch["targets"]["early_recurrence"] = torch.tensor(collated_batch["targets"]["early_recurrence"], dtype=torch.float32)
-    collated_batch["targets"]["overall_survival_24m"] = torch.tensor(collated_batch["targets"]["overall_survival_24m"], dtype=torch.float32)
-    collated_batch["demographic_info"] = torch.tensor(collated_batch["demographic_info"], dtype=torch.float32)
+
+    # tensors (safe for empty)
+    collated_batch["base"]["img"] = _stack_or_empty(collated_batch["base"]["img"])
+    collated_batch["followup"]["img"] = _stack_or_empty(collated_batch["followup"]["img"])
+
+    collated_batch["base"]["diameters"] = torch.as_tensor(collated_batch["base"]["diameters"], dtype=torch.float32)
+    collated_batch["followup"]["diameters"] = torch.as_tensor(collated_batch["followup"]["diameters"], dtype=torch.float32)
+
+    collated_batch["base"]["batch_idxes"] = torch.as_tensor(collated_batch["base"]["batch_idxes"], dtype=torch.long)
+    collated_batch["followup"]["batch_idxes"] = torch.as_tensor(collated_batch["followup"]["batch_idxes"], dtype=torch.long)
+
+    # IMPORTANT: CE expects Long labels
+    collated_batch["targets"]["early_recurrence"] = torch.as_tensor(collated_batch["targets"]["early_recurrence"], dtype=torch.long)
+    collated_batch["targets"]["overall_survival_24m"] = torch.as_tensor(collated_batch["targets"]["overall_survival_24m"], dtype=torch.long)
+
+    collated_batch["demographic_info"] = torch.as_tensor(collated_batch["demographic_info"], dtype=torch.float32)
 
     return collated_batch
+
 
 def print_label_statistics(prepared_dataset_df):
     print("Label distribution:")

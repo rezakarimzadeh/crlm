@@ -113,16 +113,18 @@ class GooglenetLSTM(pl.LightningModule):
 
     def _shared_step(self, batch, stage):
         logits = self(batch)
-        
         gt_label = batch["targets"][self.target_key].long()
 
         loss = self.criterion(logits, gt_label)
-        prob_survival = torch.softmax(logits, dim=1)[:, 1]
-        y_hat_response = torch.argmax(logits, dim=1)
-        self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
-        self.log(f"{stage}_acc", self.acc(y_hat_response, gt_label), prog_bar=False)
-        self.log(f"{stage}_auroc", self.auroc(prob_survival, gt_label), prog_bar=True)
-        self.log(f"{stage}_f1", self.f1(y_hat_response, gt_label), prog_bar=False)
+        prob_pos = torch.softmax(logits, dim=1)[:, 1]
+        y_hat = torch.argmax(logits, dim=1)
+
+        bs = len(batch["patient_ids"])  # patient-level batch size
+
+        self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True, batch_size=bs)
+        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), on_epoch=True, batch_size=bs)
+        self.log(f"{stage}_auroc", self.auroc(prob_pos, gt_label), prog_bar=True, on_epoch=True, batch_size=bs)
+        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), on_epoch=True, batch_size=bs)
         return loss
     
     def get_attentions(self, batch):

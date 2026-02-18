@@ -1,10 +1,11 @@
 import argparse
 import shutil
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from models.cnn_encoder import CnnConcatenation, CnnSiamese
 from dataloaders.cnn_dataloader import get_cnn_dataloaders
+from dataloaders.siamese_dataloader import get_siamese_dataloaders
 from utils import test_model, compute_classification_metrics, save_json, read_yaml
 from pathlib import Path
 import os
@@ -15,11 +16,11 @@ import time
 # pl.seed_everything(42)
 
 
-def get_model_class(model_name: str):
+def get_model_class_dataloader(model_name: str):
     if model_name == "CnnConcatenation":
-        return CnnConcatenation
+        return CnnConcatenation, get_cnn_dataloaders
     elif model_name == "CnnSiamese":
-        return CnnSiamese
+        return CnnSiamese, get_siamese_dataloaders
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 
@@ -31,12 +32,14 @@ def train_dl_model(args, fold_index: int):
 
     model_config = read_yaml(model_config_dir)
     model_name = args.model_name
-    train_loader, val_loader, test_loader = get_cnn_dataloaders(data_config_dir, model_config_dir, fold_index)
+
+    MODEL_CLASS, get_dataloaders = get_model_class_dataloader(model_name)
+    train_loader, val_loader, test_loader = get_dataloaders(data_config_dir, model_config_dir, fold_index)
+
     # define input dimension
     sample_batch = next(iter(train_loader))
     demographic_dim = sample_batch['demographic_info'].shape[-1]
 
-    MODEL_CLASS = get_model_class(model_name)
     model = MODEL_CLASS(demographic_dim=demographic_dim, config_dir=model_config_dir, target_key=target_key)
   
     ckpt = ModelCheckpoint(
@@ -46,6 +49,14 @@ def train_dl_model(args, fold_index: int):
         save_last=True,       
         filename="best",     
         auto_insert_metric_name=False,
+    )
+
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",      # metric to monitor
+    min_delta=0.00,          # minimum change to qualify as improvement
+    patience=5,              # epochs to wait before stopping
+    verbose=True,
+    mode="min"               # "min" for loss, "max" for accuracy/AUC
     )
     log_name = f"{model_name}/{target_key}"
 
@@ -59,7 +70,7 @@ def train_dl_model(args, fold_index: int):
     #  Trainer 
     trainer = pl.Trainer(
             max_epochs=model_config['max_epochs'],
-            callbacks=[ckpt],
+            callbacks=[ckpt, early_stop_callback],
             logger=tb_logger,
             accelerator="auto",
             devices="auto",
