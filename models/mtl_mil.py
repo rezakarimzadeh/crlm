@@ -1,0 +1,243 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import pytorch_lightning as pl
+from torch.optim.lr_scheduler import LambdaLR
+from torchmetrics.classification import BinaryAccuracy, BinaryAUROC, BinaryF1Score, MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
+
+def read_yaml_file(file_path):
+    import yaml
+    with open(file_path, 'r') as f:
+        return yaml.safe_load(f)
+        
+class AttentionMIL(nn.Module):
+    def __init__(self, input_dim, hidden_dim, M, L):
+        super(AttentionMIL, self).__init__()
+        self.M = M
+        self.L = L
+        self.ATTENTION_BRANCHES = 1
+        
+        self.BN = MaskedBatchNorm1d(input_dim)
+        self.attention_bn = MaskedBatchNorm1d(self.M)
+        self.feature_extractor = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, self.M)
+        )
+        self.attention = nn.Sequential(
+            nn.Linear(self.M, self.L), # matrix V
+            nn.Tanh(),
+            nn.Linear(self.L, self.ATTENTION_BRANCHES) # matrix w (or vector w if self.ATTENTION_BRANCHES==1)
+        )
+
+
+    def forward(self, x, pad_mask, attention=False):
+        x = self.BN(x, pad_mask)
+        # x: [B, T, F] 
+        H = self.feature_extractor(x)  # [B, T, H]
+        # H = self.attention_bn(H, pad_mask)
+        A = self.attention(H).squeeze(-1)  # [B, T]
+        # Apply mask before softmax
+        A = A.masked_fill(pad_mask, float('-inf'))
+        A = F.softmax(A, dim=1)  # [B, T]
+        M = torch.bmm(A.unsqueeze(1), H).squeeze(1)  # [B, H]
+        M = M.view(M.size(0), -1)  # Flatten to [B, H]
+        if attention:
+            return M, A
+        return M
+
+class Classifier(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(Classifier, self).__init__()
+
+        self.classifier = nn.Sequential(
+            nn.BatchNorm1d(input_dim),
+            nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            # nn.Dropout(0.1),
+            nn.Linear(hidden_dim, hidden_dim//2),
+            # nn.BatchNorm1d(hidden_dim//2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim//2, output_dim)
+        )
+
+    def forward(self, x):
+        return self.classifier(x)
+
+class MTLRadiomicsMIL(pl.LightningModule):
+    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str, target_keys: list):
+        super(MTLRadiomicsMIL, self).__init__()
+        self.save_hyperparameters()
+        dim = 256 #int((4/5)*features_dim)
+        self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
+        
+        for i in range(len(target_keys)):
+            if target_keys[i] == "pathology":
+                setattr(self, f"classifier_head_{target_keys[i]}", Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=3))
+            else:
+                setattr(self, f"classifier_head_{target_keys[i]}", Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2))
+
+        self.target_keys = target_keys
+
+        config = read_yaml_file(config_dir)
+        self.lr = config['lr']
+        self.max_epochs = config['max_epochs']
+
+        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+        self.register_buffer("class_weights", class_weights)
+        self.criterion_early_recurrence = nn.CrossEntropyLoss(weight=self.class_weights) 
+
+        self.criterion = nn.CrossEntropyLoss()
+        
+        # ---- Kendall MTL uncertainty weighting (all tasks are classification) ----
+        self.task2idx = {k: i for i, k in enumerate(self.target_keys)}
+        # s_i = log(sigma_i^2) per task (learned)
+        self.log_vars = nn.Parameter(torch.zeros(len(self.target_keys)))
+
+        # Metrics
+        self.binary_acc = BinaryAccuracy()
+        self.binary_auroc = BinaryAUROC()
+        self.binary_f1 = BinaryF1Score()
+
+        self.multi_acc = MulticlassAccuracy(num_classes=3)
+        self.multi_auroc = MulticlassAUROC(num_classes=3)
+        self.multi_f1 = MulticlassF1Score(num_classes=3, average="macro")
+
+    def forward(self, batch):
+        base_emb = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
+        followup_emb = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
+        combined_emb = torch.cat([base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
+        outputs = {}
+        for i, target_key in enumerate(self.target_keys):
+            classifier_head = getattr(self, f"classifier_head_{target_key}")
+            logits = classifier_head(combined_emb)
+            outputs[target_key] = logits
+        return outputs
+
+    def _shared_step(self, batch, stage):
+        logits = self(batch)
+
+        total_loss = 0.0
+
+        for target_key in self.target_keys:
+            gt_label = batch["targets"][target_key].long()
+
+            # ===== BASE TASK LOSS (unchanged) =====
+            if target_key == "early_recurrence":
+                base_loss = self.criterion_early_recurrence(logits[target_key], gt_label)
+
+            elif target_key == "pathology":
+                mask = gt_label != -1
+                # if nothing valid, skip this task for this batch
+                if mask.sum() == 0:
+                    continue
+                base_loss = self.criterion(logits[target_key][mask], gt_label[mask])
+
+            else:
+                base_loss = self.criterion(logits[target_key], gt_label)
+
+            # ===== KENDALL WEIGHTING (classification form) =====
+            i = self.task2idx[target_key]
+            s = self.log_vars[i]                 # log(sigma^2)
+            precision = torch.exp(-s)            # 1/sigma^2
+            loss = precision * base_loss + 0.5 * s
+            total_loss = total_loss + loss
+
+            # (optional but useful) log sigma for monitoring
+            self.log(f"{stage}_{target_key}_sigma", torch.exp(0.5 * s).detach(), prog_bar=False)
+
+            # ===== METRICS (unchanged, but use base_loss for per-task loss logging) =====
+            if target_key == "pathology":
+                mask = gt_label != -1
+                logits_valid = logits[target_key][mask]
+                gt_valid = gt_label[mask]
+
+                if len(gt_valid) > 0:
+                    probs = torch.softmax(logits_valid, dim=1)
+                    preds = torch.argmax(logits_valid, dim=1)
+
+                    self.log(f"{stage}_{target_key}_acc", self.multi_acc(preds, gt_valid), prog_bar=True)
+                    self.log(f"{stage}_{target_key}_auroc", self.multi_auroc(probs, gt_valid), prog_bar=True)
+                    self.log(f"{stage}_{target_key}_f1", self.multi_f1(preds, gt_valid))
+
+            else:
+                probs = torch.softmax(logits[target_key], dim=1)[:, 1]
+                preds = torch.argmax(logits[target_key], dim=1)
+
+                self.log(f"{stage}_{target_key}_acc", self.binary_acc(preds, gt_label))
+                self.log(f"{stage}_{target_key}_auroc", self.binary_auroc(probs, gt_label), prog_bar=True)
+                self.log(f"{stage}_{target_key}_f1", self.binary_f1(preds, gt_label))
+
+            self.log(f"{stage}_{target_key}_loss", base_loss, prog_bar=True)
+
+        self.log(f"{stage}_loss", total_loss, prog_bar=True)
+        return total_loss
+
+    
+    def get_attentions(self, batch):
+        _, base_attention = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device), attention=True)
+        _, followup_attention = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device), attention=True)
+        return base_attention, followup_attention
+    
+    def training_step(self, batch, batch_idx):
+        return self._shared_step(batch, "train")
+
+    def validation_step(self, batch, batch_idx):
+        self._shared_step(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        self._shared_step(batch, "test")
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        # return optimizer
+        scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
+        return [optimizer], [scheduler]
+
+
+class MaskedBatchNorm1d(nn.Module):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1):
+        super().__init__()
+        self.bn = nn.BatchNorm1d(num_features, eps=eps, momentum=momentum)
+
+    def forward(self, x, pad_mask=None):
+        """
+        x: [B, T, F]  (must be float)
+        pad_mask: [B, T] boolean, True for PAD, False for valid
+        """
+        x = x.float()  # BN needs float
+        device = x.device
+        B, T, F = x.shape
+
+        assert F == self.bn.num_features, f"BN expects {self.bn.num_features} features, got {F}"
+
+        if pad_mask is None:
+            x_flat = x.reshape(B * T, F)
+            x_bn = self.bn(x_flat)
+            return x_bn.reshape(B, T, F)
+
+        pad_mask = pad_mask.to(device=device, dtype=torch.bool)
+        x_flat = x.reshape(B * T, F)
+
+        mask_flat = pad_mask.reshape(B * T)     # True=pad
+        valid_idx = ~mask_flat                  # True=valid
+
+        n_valid = int(valid_idx.sum().item())
+        if n_valid == 0:
+            return x
+
+        x_valid = x_flat[valid_idx]             # [N_valid, F]
+
+        # Avoid BN instability with tiny batches in training
+        if self.training and n_valid < 2:
+            return x
+
+        x_valid_bn = self.bn(x_valid)
+
+        x_flat_out = x_flat.clone()
+        x_flat_out[valid_idx] = x_valid_bn
+
+        return x_flat_out.reshape(B, T, F)

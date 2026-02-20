@@ -1,7 +1,7 @@
 import argparse
 import shutil
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from models.mil import RadiomicsMIL
 from models.mlp import StatisticalPoolingMLP
@@ -48,8 +48,15 @@ def train_dl_model(args, fold_index: int):
         filename="best",     
         auto_insert_metric_name=False,
     )
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",      # metric to monitor
+    min_delta=0.00,          # minimum change to qualify as improvement
+    patience=20,              # epochs to wait before stopping
+    verbose=True,
+    mode="min"               # "min" for loss, "max" for accuracy/AUC
+    )
     str_included_features = "_".join(feature_to_include)
-    log_name = f"{model_name}_{target_key}_{str_included_features}"
+    log_name = f"{model_name}/{target_key}/{str_included_features}"
 
     save_dir = Path("Results") / log_name / f"fold_{fold_index}"
     if save_dir.exists():
@@ -61,7 +68,7 @@ def train_dl_model(args, fold_index: int):
     #  Trainer 
     trainer = pl.Trainer(
             max_epochs=model_config['max_epochs'],
-            callbacks=[ckpt],
+            callbacks=[ckpt, early_stop_callback],
             logger=tb_logger,
             accelerator="auto",
             devices="auto",

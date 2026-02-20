@@ -1,0 +1,7 @@
+config_dir: ./configs/rpnet3d_config.yaml
+focal_alpha: 0.25
+focal_gamma: 2.0
+target_key: overall_survival_24m
+w_cls: 1.0
+w_seg_post: 0.2
+w_seg_pre: 0.2

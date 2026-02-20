@@ -76,71 +76,49 @@ class VolumesDataset(Dataset):
         self.preprocessed_data_base_dir = preprocessed_data_base_dir
         self.hu_window = tuple(dataloader_config["hu_window"])
         self.dataloader_config = dataloader_config
-        self.transformations = self._get_transformations(train=train)
+        self.transformations = self._transformations(train=train)
 
     def __len__(self):
         return len(self.df)
     
-    def _get_transformations(self, train, keys=["base_img", "followup_img"], interpolation_mode=("trilinear", "trilinear")):
-        train_transforms = Compose(
-                        [
-                            LoadImaged(keys=keys, reader=NibabelReader()),
-                            EnsureChannelFirstd(keys=keys),
-                            Orientationd(keys=keys, axcodes="RAS"),
-                            ScaleIntensityRanged(
-                                keys=keys,
-                                a_min=self.hu_window[0],
-                                a_max=self.hu_window[1],
-                                b_min=0.0,
-                                b_max=1.0,
-                                clip=True,
-                            ),
-                            RandFlipd(
-                                keys=keys,
-                                spatial_axis=[0],
-                                prob=0.10,
-                            ),
-                            RandFlipd(
-                                keys=keys,
-                                spatial_axis=[1],
-                                prob=0.10,
-                            ),
-                            RandFlipd(
-                                keys=keys,
-                                spatial_axis=[2],
-                                prob=0.10,
-                            ),
-                            RandRotate90d(
-                                keys=keys,
-                                prob=0.10,
-                                max_k=3,
-                            ),
-                            RandAffined(
-                                keys=keys,
-                                mode=interpolation_mode,
-                                prob=0.5, spatial_size=(192, 192, 128),
-                                rotate_range=(np.pi/15, np.pi/15, np.pi/15),
-                                scale_range=(0.1, 0.1, 0.1)),
-                            RandShiftIntensityd(
-                                keys=keys,
-                                offsets=0.10,
-                                prob=0.50,
-                            ),
-                        ]
-                    )
+    def _transformations(self, train, keys=("base_img", "followup_img")):
+        # 1) deterministic, shared
+        pre = [
+            LoadImaged(keys=keys, reader=NibabelReader()),
+            EnsureChannelFirstd(keys=keys),
+            Orientationd(keys=keys, axcodes="RAS"),
+            ScaleIntensityRanged(
+                keys=keys,
+                a_min=self.hu_window[0], a_max=self.hu_window[1],
+                b_min=0.0, b_max=1.0, clip=True
+            ),
+        ]
 
-        val_transforms = Compose(
-                        [
-                            LoadImaged(keys=keys, reader=NibabelReader()),
-                            EnsureChannelFirstd(keys=keys),
-                            Orientationd(keys=keys, axcodes="RAS"),
-                            ScaleIntensityRanged(keys=keys, a_min=self.hu_window[0], a_max=self.hu_window[1], b_min=0.0, b_max=1.0, clip=True),
-                        ]
-                    )
-        if train:
-            return train_transforms
-        else:
-            return val_transforms
+        if not train:
+            return Compose(pre)
+
+        # 2) coupled spatial augs (same random params for both keys)
+        spatial = [
+            RandFlipd(keys=keys, spatial_axis=0, prob=0.10),
+            RandFlipd(keys=keys, spatial_axis=1, prob=0.10),
+            RandFlipd(keys=keys, spatial_axis=2, prob=0.10),
+            RandRotate90d(keys=keys, prob=0.10, max_k=3),
+            RandAffined(
+                keys=keys,
+                mode=("trilinear", "trilinear"),  # per-key interpolation allowed
+                prob=0.1,
+                spatial_size=(192, 192, 128),
+                rotate_range=(np.pi/18, np.pi/18, np.pi/18),
+                scale_range=(0.1, 0.1, 0.1),
+            ),
+        ]
+
+        # 3) intensity aug 
+        intensity = [
+            RandShiftIntensityd(keys=keys, offsets=0.10, prob=0.10),
+        ]
+
+        return Compose(pre + spatial + intensity)
 
     def _get_available_idxs(self, idx):
         sample = self.df.iloc[idx]
@@ -192,9 +170,9 @@ def get_siamese_dataloaders(data_config_dir, model_config_dir, fold_idx):
     dataset_val = VolumesDataset(matched_val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     dataset_test = VolumesDataset(matched_test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6)
-    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
-    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
+    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=8)
+    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=8)
+    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=8)
     return train_loader, val_loader, test_loader
     
 

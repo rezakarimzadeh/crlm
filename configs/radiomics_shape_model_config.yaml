@@ -4,7 +4,7 @@ extra_shape_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morp
 batch_size: 32
 num_workers: 6
 lr: 0.01
-max_epochs: 100
+max_epochs: 200
 
 # ============================================================
 # Radiomics feature groups for CRLM treatment-response studies

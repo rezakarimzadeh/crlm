@@ -1,0 +1,7 @@
+config_dir: ./configs/radiomics_shape_model_config.yaml
+demographic_dim: 4
+features_dim: 128
+target_keys:
+- early_recurrence
+- overall_survival_24m
+- pathology

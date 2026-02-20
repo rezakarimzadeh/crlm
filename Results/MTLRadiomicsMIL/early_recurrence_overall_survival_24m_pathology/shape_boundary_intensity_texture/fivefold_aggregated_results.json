@@ -1,0 +1,44 @@
+{
+    "pathology": {
+        "accuracy_mean": 0.4104617604617604,
+        "accuracy_std": 0.059638701484718566,
+        "precision_mean": 0.4318800833005378,
+        "precision_std": 0.09388698659864074,
+        "recall_mean": 0.4104617604617604,
+        "recall_std": 0.059638701484718566,
+        "specificity_mean": 0.0,
+        "specificity_std": 0.0,
+        "f1_score_mean": 0.3740935789457593,
+        "f1_score_std": 0.0388479579961403,
+        "roc_auc_mean": 0.5843092716516691,
+        "roc_auc_std": 0.059988937449807024
+    },
+    "early": {
+        "recurrence_accuracy_mean": 0.6543735919286904,
+        "recurrence_accuracy_std": 0.05985758871843525,
+        "recurrence_precision_mean": 0.4826847290640394,
+        "recurrence_precision_std": 0.14869851020218344,
+        "recurrence_recall_mean": 0.5528677441720921,
+        "recurrence_recall_std": 0.24669997104100846,
+        "recurrence_specificity_mean": 0.7182336414125428,
+        "recurrence_specificity_std": 0.11569432825036621,
+        "recurrence_f1_score_mean": 0.4838562746251493,
+        "recurrence_f1_score_std": 0.11961101450067207,
+        "recurrence_roc_auc_mean": 0.6721795809496038,
+        "recurrence_roc_auc_std": 0.08522736297796824
+    },
+    "overall": {
+        "survival_24m_accuracy_mean": 0.5887786013067627,
+        "survival_24m_accuracy_std": 0.0337227429867048,
+        "survival_24m_precision_mean": 0.64033701759164,
+        "survival_24m_precision_std": 0.06122104909026137,
+        "survival_24m_recall_mean": 0.7268708010335917,
+        "survival_24m_recall_std": 0.12469295199625655,
+        "survival_24m_specificity_mean": 0.4096113472584061,
+        "survival_24m_specificity_std": 0.11356294818106516,
+        "survival_24m_f1_score_mean": 0.6725078030675669,
+        "survival_24m_f1_score_std": 0.04347819923123903,
+        "survival_24m_roc_auc_mean": 0.637767779263422,
+        "survival_24m_roc_auc_std": 0.05595751542921997
+    }
+}

@@ -100,5 +100,125 @@ def compute_classification_metrics(test_output):
         'roc_auc': roc_auc
     }
 
+    if 'base_dice' in test_output and 'followup_dice' in test_output:
+        metrics['base_dice'] = np.mean(test_output['base_dice'])
+        metrics['followup_dice'] = np.mean(test_output['followup_dice'])
+
     return metrics
 
+
+def mtl_test_model(model, test_loader, target_keys):
+    model.eval()
+    outputs = {k: {"y_true": [], "y_pred": [], "y_prob": []} for k in target_keys}
+
+    try:
+        device = model.device
+    except:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    with torch.no_grad():
+        for batch in test_loader:
+            logits = model(batch)
+
+            for target_key in target_keys:
+                preds = torch.argmax(logits[target_key], dim=1)
+                gt = batch['targets'][target_key]
+                if target_key == "pathology":
+                    mask = gt != -1
+                    preds = preds[mask]
+                    gt = gt[mask]
+                    probs = torch.softmax(logits[target_key], dim=1)[mask]
+                    outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
+                else:
+                    # binary: store P(class=1) [B]
+                    probs = torch.softmax(logits[target_key], dim=1)[:, 1]
+                    outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
+                # print(f"Target: {target_key}, GT labels shape: {gt.shape}, Preds shape: {preds.shape}")
+                outputs[target_key]["y_pred"].extend(preds.cpu().numpy())
+                outputs[target_key]["y_true"].extend(gt.cpu().numpy())
+
+    return outputs
+
+
+def mtl_compute_classification_metrics(test_outputs):
+    results = {}
+    for target_key, test_output in test_outputs.items():
+        y_true = np.array(test_output["y_true"])
+        y_pred = np.array(test_output["y_pred"])
+        y_prob = np.array(test_output["y_prob"])
+
+        if target_key == "pathology":
+            # multiclass
+            accuracy = accuracy_score(y_true, y_pred)
+            precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+            recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+            f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+            # print(f"shapes for {target_key} - y_true: {y_true.shape}, y_pred: {y_pred.shape}, y_prob: {y_prob.shape}")
+            C = y_prob.shape[1]
+            roc_auc = roc_auc_score(y_true, y_prob, multi_class='ovr', labels=np.arange(C))
+
+
+            specificity = 0
+        else:
+            # binary
+            accuracy = accuracy_score(y_true, y_pred)
+            precision = precision_score(y_true, y_pred, zero_division=0)
+            recall = recall_score(y_true, y_pred, zero_division=0)
+            f1 = f1_score(y_true, y_pred, zero_division=0)
+            roc_auc = roc_auc_score(y_true, y_prob)
+
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+        results[target_key] = {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'specificity': specificity,
+            'f1_score': f1,
+            'roc_auc': roc_auc
+        }
+
+    return results
+
+# RpNet3D-specific test function that calls the generic mtl test and metric functions
+
+def compute_dice(pred_logits, gt_masks, threshold=0.5):
+    device = pred_logits.device
+    gt_masks = gt_masks.to(device)
+    # pred logits: [B, 1, D, H, W], gt_masks: [B, 1, D, H, W]
+    pred_masks = (torch.sigmoid(pred_logits) > threshold).float()
+    gt_masks = gt_masks.float()
+    intersection = (pred_masks * gt_masks).sum(dim=[1, 2, 3, 4])
+    union = pred_masks.sum(dim=[1, 2, 3, 4]) + gt_masks.sum(dim=[1, 2, 3, 4])
+    dice = (2. * intersection + 1e-6) / (union + 1e-6)
+    return dice.cpu().numpy().tolist()
+
+def rpn3d_test_model(model, test_loader, target_key):
+        model.eval()
+        output = {"y_true": [], "y_pred": [], "y_prob": [], 'base_dice': [], 'followup_dice': []}
+        try:
+            device = model.device
+        except:
+             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        with torch.no_grad():
+            for batch in test_loader:
+                model_output = model(batch)
+                
+                base_seg_logits = model_output['seg_pre'] #[B, 1, D, H, W]
+                followup_seg_logits = model_output['seg_post']
+                
+                base_seg_gt = batch['base_seg']
+                followup_seg_gt = batch['followup_seg']
+
+
+                logits = model_output['cls_logits']
+                probs = torch.softmax(logits, dim=1)[:, 1]
+                preds = torch.argmax(logits, dim=1)
+
+                output["y_pred"].extend(preds.cpu().numpy())
+                output["y_prob"].extend(probs.cpu().numpy())
+                output["y_true"].extend(batch['targets'][target_key].cpu().numpy())
+                output["base_dice"].extend(compute_dice(base_seg_logits, base_seg_gt))
+                output["followup_dice"].extend(compute_dice(followup_seg_logits, followup_seg_gt))
+        return output

@@ -53,15 +53,15 @@ class Classifier(nn.Module):
         super(Classifier, self).__init__()
 
         self.classifier = nn.Sequential(
-            nn.BatchNorm1d(input_dim),
-            nn.Linear(input_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(),
-            # nn.Dropout(0.1),
-            nn.Linear(hidden_dim, hidden_dim//2),
+            # nn.BatchNorm1d(input_dim),
+            nn.Linear(input_dim, hidden_dim//2),
             # nn.BatchNorm1d(hidden_dim//2),
             nn.ReLU(),
-            nn.Linear(hidden_dim//2, output_dim)
+            # nn.Dropout(0.1),
+            nn.Linear(hidden_dim//2, hidden_dim//4),
+            # nn.BatchNorm1d(hidden_dim//4),
+            nn.ReLU(),
+            nn.Linear(hidden_dim//4, output_dim)
         )
 
     def forward(self, x):
@@ -128,7 +128,7 @@ class RadiomicsMIL(pl.LightningModule):
         self._shared_step(batch, "test")
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-5)
         # return optimizer
         scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
         return [optimizer], [scheduler]

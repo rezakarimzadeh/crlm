@@ -1,4 +1,5 @@
 dataloaders/cached_data
 */__pycache__
 
-Results/
+# ignore .ckpt files in all dirs
+*.ckpt

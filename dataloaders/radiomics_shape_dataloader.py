@@ -132,6 +132,10 @@ def collate_fn(batch):
         [int(item["recist_cario5"]) for item in batch],
         dtype=torch.long
     )
+    pathology = torch.tensor(
+        [int(item["pathology"]) for item in batch],
+        dtype=torch.long
+    )
     # -------------------------
     # Pad base & follow-up sets
     # -------------------------
@@ -161,6 +165,7 @@ def collate_fn(batch):
             "early_recurrence": early_recurrence,      # [B]
             "overall_survival_24m": overall_survival_24m,  # [B]
             "recist_cario5": recist_cario5,        # [B]
+            "pathology": pathology,                # [B]
         },
 
         "clinical_info": clinical_info,
@@ -169,15 +174,24 @@ def collate_fn(batch):
 
 def print_label_statistics(prepared_dataset):
     early_recurrence_labels = []
-
+    overall_survival_labels = []
+    pathology_labels = []
     for i in range(len(prepared_dataset)):
         item = prepared_dataset[i]
         early_recurrence_labels.append(int(item["early_recurrence"]))  # or item["early_recurrence"] depending on which label you want to check
+        overall_survival_labels.append(int(item["overall_survival_24m"]))
+        pathology_labels.append(int(item["pathology"]))
 
     er_series = pd.Series(early_recurrence_labels)
+    overall_survival_series = pd.Series(overall_survival_labels)
+    pathology_series = pd.Series(pathology_labels)
 
     print("early Recurrence Label Distribution:")
     print(er_series.value_counts())
+    print("overall survival 24m Label Distribution:")
+    print(overall_survival_series.value_counts())
+    print("pathology Label Distribution:")
+    print(pathology_series.value_counts())
 
 
 def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx):
@@ -191,11 +205,11 @@ def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_t
     fold_img_groups = read_json(fold_img_groups_path)
     matched_train_df, matched_val_df, matched_test_df = match_excel_splits_with_imgroups(excel_table, fold_img_groups)  
     print(f"Fold {fold_idx}: Train={len(matched_train_df)}, Val={len(matched_val_df)}, Test={len(matched_test_df)}")
-    dataset_train = FastCustomDataset(matched_train_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
+    dataset_train = FastCustomDataset(matched_train_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=True)
     print_label_statistics(dataset_train)
-    dataset_val = FastCustomDataset(matched_val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
+    dataset_val = FastCustomDataset(matched_val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
     print_label_statistics(dataset_val)
-    dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config)
+    dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
     print_label_statistics(dataset_test)
     
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=10, collate_fn=collate_fn)
@@ -211,9 +225,10 @@ def fn_test_loader(loader):
     print(f"Example base features shape: {sample_data['base']['features'].shape}")
     print(f"Example follow-up features shape: {sample_data['followup']['features'].shape}")
     print(f"Example demographic info shape: {sample_data['demographic_info'].shape}")
-    print(f"Example early response targets: {sample_data['targets']['early_response']}")
+    print(f"Example early recurrence targets: {sample_data['targets']['early_recurrence']}")
     print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
     print(f"Example recist_cario5 targets: {sample_data['targets']['recist_cario5']}")
+    print(f"Example pathology targets: {sample_data['targets']['pathology']}")
 
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'
@@ -221,4 +236,4 @@ if __name__ == "__main__":
     fold_idx = 0  # Example fold index
     feature_to_include = ['shape', 'boundary']  # Example feature to include
     train_loader, val_loader, test_loader = get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx)
-    fn_test_loader(train_loader)
+    fn_test_loader(test_loader)

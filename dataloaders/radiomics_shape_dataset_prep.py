@@ -138,6 +138,7 @@ class FastCustomDataset(Dataset):
         cache_dir: str = './cached_data',
         use_cache: bool = False,
         verbose: bool = False,
+        train: bool = False,
     ):
         """
         matched_df: dataframe with columns like:
@@ -154,6 +155,7 @@ class FastCustomDataset(Dataset):
         self.feature_to_include = list(feature_to_include)
         self.dataloader_config = dict(dataloader_config)
         self.verbose = verbose
+        self.train = train
 
         # ---- Precompute feature list once ----
         self.features_to_add = self._compute_features_to_add()
@@ -188,6 +190,24 @@ class FastCustomDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.aggregated_data[idx]
+        # if self.train:
+        #     # select a random lesion from the base and follow-up features for training
+        #     output = self.aggregated_data[idx]            
+        #     n_base = output["base_img_features"].shape[0]
+        #     n_followup = output["followup_img_features"].shape[0]
+        #     # shuffle lesions and randomly pick from [n//2, n] lesions
+        #     base_idx = np.random.randint(n_base//2, n_base) if n_base > 1 else 1
+        #     followup_idx = np.random.randint(n_followup//2, n_followup) if n_followup > 1 else 1
+        #     base_random_shuffle = np.random.permutation(n_base)[:base_idx]
+        #     output["base_img_features"] = output["base_img_features"][base_random_shuffle]
+        #     output["base_lesion_labels"] = output["base_lesion_labels"][base_random_shuffle]
+        #     followup_random_shuffle = np.random.permutation(n_followup)[:followup_idx] 
+        #     output["followup_img_features"] = output["followup_img_features"][followup_random_shuffle]
+        #     output["followup_lesion_labels"] = output["followup_lesion_labels"][followup_random_shuffle]
+
+        #     return output
+        # else:    
+        #     return self.aggregated_data[idx]
 
     # ----------------------------
     # Feature selection utilities
@@ -282,9 +302,15 @@ class FastCustomDataset(Dataset):
         }
         sex_map = {"Female": 0, "Male": 1}
 
+        pathology_map = {"nan": -1,
+                        "No histological response": 0,
+                        "Partial histological response": 1,
+                        "Major histological response": 2}  
+
         # Map / coerce
         df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
         df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
+        df["pathology_enc"] = df["Pathology"].fillna("nan").map(pathology_map).astype(int)
         df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
         df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
 
@@ -304,6 +330,7 @@ class FastCustomDataset(Dataset):
                     "patient_id": r["patient_id"],
                     "early_recurrence": r["early_recurrence"],
                     "overall_survival_24m": r["overall_survival_24m"],
+                    "pathology": r["pathology_enc"],
                     "demographic_info": demographic_info,
                     "all_clinical_info": r,
                     "recist_cario5": r["recist_cario5_enc"],
@@ -335,6 +362,7 @@ class FastCustomDataset(Dataset):
                 "overall_survival_24m": r["overall_survival_24m"],
                 "demographic_info": r["demographic_info"],
                 "all clinical_info": r["all_clinical_info"],
+                "pathology": r["pathology"],
                 "recist_cario5": r["recist_cario5"],
             }
 
