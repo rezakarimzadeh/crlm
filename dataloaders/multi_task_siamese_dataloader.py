@@ -135,11 +135,11 @@ class VolumesDataset(Dataset):
         ]
 
         # 3) intensity aug 
-        intensity = [
-            RandShiftIntensityd(keys=img_keys, offsets=0.10, prob=0.10),
-        ]
+        # intensity = [
+        #     RandShiftIntensityd(keys=img_keys, offsets=0.10, prob=0.10),
+        # ]
 
-        return Compose(pre + spatial + intensity)
+        return Compose(pre + spatial)
 
     def _get_available_idxs(self, idx):
         sample = self.df.iloc[idx]

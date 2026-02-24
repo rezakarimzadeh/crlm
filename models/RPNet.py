@@ -192,7 +192,7 @@ class Siam3DUNetTorch(nn.Module):
         in_channels: int = 1,         # Keras input_shape=(4,128,128,128)
         num_classes: int = 2,            # Keras Dense(1) with sigmoid => 2 classes (binary)
         n_labels: int = 1,            # Keras n_labels=4
-        n_base_filters: int = 6,
+        n_base_filters: int = 16,
         depth: int = 5,
         dropout_rate: float = 0.3,
         n_segmentation_levels: int = 3,
@@ -283,16 +283,15 @@ class RPNetLightning(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        # IMPORTANT: use your defined model here (the one that returns score, mask1, mask2)
-        # self.model = Siam3DUNetTorch(...)  # <-- your defined model
-        self.model = Siam3DUNetTorch()
 
         self.target_key = target_key
 
         config = read_yaml_file(config_dir)
         self.lr = config["lr"]
         self.max_epochs = config["max_epochs"]
+        self.n_base_filters = config["n_base_filters"]
 
+        self.model = Siam3DUNetTorch(n_base_filters=self.n_base_filters)
         # Keras: binary_crossentropy on sigmoid(score)
         self.cls_criterion = nn.CrossEntropyLoss()
 
