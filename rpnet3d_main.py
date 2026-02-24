@@ -1,7 +1,7 @@
 import argparse
 import shutil
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from models.RPNet import RPNetLightning
 from dataloaders.multi_task_siamese_dataloader import get_mtl_siamese_dataloaders
@@ -35,6 +35,13 @@ def train_dl_model(args, fold_index: int):
         filename="best",     
         auto_insert_metric_name=False,
     )
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",      # metric to monitor
+    min_delta=0.00,          # minimum change to qualify as improvement
+    patience=5,              # epochs to wait before stopping
+    verbose=True,
+    mode="min"               # "min" for loss, "max" for accuracy/AUC
+    )
     log_name = f"{model_name}/{target_key}"
 
     save_dir = Path("Results") / log_name / f"fold_{fold_index}"
@@ -47,7 +54,7 @@ def train_dl_model(args, fold_index: int):
     #  Trainer 
     trainer = pl.Trainer(
             max_epochs=model_config['max_epochs'],
-            callbacks=[ckpt],
+            callbacks=[ckpt, early_stop_callback],
             logger=tb_logger,
             accelerator="auto",
             devices="auto",

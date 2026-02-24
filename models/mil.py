@@ -71,7 +71,7 @@ class RadiomicsMIL(pl.LightningModule):
     def __init__(self, features_dim: int, demographic_dim: int, config_dir: str, target_key: str):
         super(RadiomicsMIL, self).__init__()
         self.save_hyperparameters()
-        dim = 256 #int((4/5)*features_dim)
+        dim = 512 #int((4/5)*features_dim)
         self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
         self.classifier_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2)
@@ -81,11 +81,13 @@ class RadiomicsMIL(pl.LightningModule):
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
         self.max_epochs = config['max_epochs']
-
-        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
-        self.register_buffer("class_weights", class_weights)
-        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
-
+        if self.target_key == "early_recurrence":
+            # class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+            class_weights = torch.tensor([0.3, 1.7], dtype=torch.float32)
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
+        else:
+            self.criterion = nn.CrossEntropyLoss()
         # Metrics
         self.acc = BinaryAccuracy()
         self.auroc = BinaryAUROC()

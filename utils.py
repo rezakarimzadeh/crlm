@@ -183,11 +183,11 @@ def mtl_compute_classification_metrics(test_outputs):
 
 # RpNet3D-specific test function that calls the generic mtl test and metric functions
 
-def compute_dice(pred_logits, gt_masks, threshold=0.5):
-    device = pred_logits.device
+def compute_dice(pred_probs, gt_masks, threshold=0.5):
+    device = pred_probs.device
     gt_masks = gt_masks.to(device)
-    # pred logits: [B, 1, D, H, W], gt_masks: [B, 1, D, H, W]
-    pred_masks = (torch.sigmoid(pred_logits) > threshold).float()
+    # pred probs: [B, 1, D, H, W], gt_masks: [B, 1, D, H, W]
+    pred_masks = (pred_probs > threshold).float()
     gt_masks = gt_masks.float()
     intersection = (pred_masks * gt_masks).sum(dim=[1, 2, 3, 4])
     union = pred_masks.sum(dim=[1, 2, 3, 4]) + gt_masks.sum(dim=[1, 2, 3, 4])
@@ -203,16 +203,12 @@ def rpn3d_test_model(model, test_loader, target_key):
              device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         with torch.no_grad():
             for batch in test_loader:
-                model_output = model(batch)
-                
-                base_seg_logits = model_output['seg_pre'] #[B, 1, D, H, W]
-                followup_seg_logits = model_output['seg_post']
+                logits, base_seg_logits, followup_seg_logits = model(batch)
                 
                 base_seg_gt = batch['base_seg']
                 followup_seg_gt = batch['followup_seg']
 
 
-                logits = model_output['cls_logits']
                 probs = torch.softmax(logits, dim=1)[:, 1]
                 preds = torch.argmax(logits, dim=1)
 

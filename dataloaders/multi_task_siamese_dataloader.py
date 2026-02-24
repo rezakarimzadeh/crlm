@@ -191,13 +191,13 @@ def get_mtl_siamese_dataloaders(data_config_dir, model_config_dir, fold_idx):
     print_label_statistics(matched_val_df)
     print("Test label distribution:")
     print_label_statistics(matched_test_df)
-    dataset_train = VolumesDataset(matched_train_df[:4], preprocessed_data_base_dir=preprocessed_data_base_dir, train=True, dataloader_config=dataloader_config)
-    dataset_val = VolumesDataset(matched_val_df[:4], preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
-    dataset_test = VolumesDataset(matched_test_df[:4], preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
+    dataset_train = VolumesDataset(matched_train_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=True, dataloader_config=dataloader_config)
+    dataset_val = VolumesDataset(matched_val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
+    dataset_test = VolumesDataset(matched_test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6)
-    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=6)
-    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=6)
+    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=4)
+    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4)
+    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4)
     return train_loader, val_loader, test_loader
     
 
