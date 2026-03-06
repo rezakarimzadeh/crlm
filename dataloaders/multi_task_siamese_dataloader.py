@@ -26,6 +26,8 @@ from monai.transforms import (
 )
 from monai.data import DataLoader, Dataset
 from monai.data.image_reader import NibabelReader
+import nibabel as nib
+
 
 class MergeLabelsGE2ToOneD(MapTransform):
     """
@@ -68,7 +70,8 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
                 match['patient_id'] = patient_id
                 match['early_recurrence'] = match['ER (1 = yes, 0 = no)'].astype(int)
                 match['overall_survival_24m'] = (match['OSm'] > 24).astype(int)
-                match['demographic_info'] = match[['mutstat_enc', 'sex_enc', 'who_enc', 'age_f']].values.tolist()
+                match['demographic_info'] = match[['mutstat_enc', 'sex_enc', 'who_enc', 'age_f', 'baseline_ttv', 'delta_ttv_rel']].values.tolist()
+                match['pathology'] = match['pathology_enc'].astype(int)
                 matched_rows.append(match)
         return pd.concat(matched_rows).reset_index(drop=True)
     
@@ -79,11 +82,19 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
     }
     sex_map = {"Female": 0, "Male": 1}
 
+    pathology_map = {"nan": -1,
+                        "No histological response": 0,
+                        "Partial histological response": 1,
+                        "Major histological response": 2} 
+    
     # Map / coerce
     df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
     df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
+    df["pathology_enc"] = df["Pathology"].fillna("nan").map(pathology_map).astype(int)
     df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
     df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
+    df["baseline_ttv"] = pd.to_numeric(df["Baseline volume ml"], errors="coerce").fillna(-1.0).astype(float)
+    df["delta_ttv_rel"] = pd.to_numeric(df["FU1 delta vol rel"], errors="coerce").fillna(-1.0).astype(float)
     
     train_df = group_matched_indices(df, fold_img_groups['train'])
     val_df = group_matched_indices(df, fold_img_groups['val'])
@@ -152,7 +163,8 @@ class VolumesDataset(Dataset):
                 
                 "demographic_info": torch.tensor(sample['demographic_info']),  # Example demographic info, adjust as needed
                 "targets": {"early_recurrence": torch.tensor(sample['early_recurrence']),
-                            "overall_survival_24m": torch.tensor(sample['overall_survival_24m'])
+                            "overall_survival_24m": torch.tensor(sample['overall_survival_24m']),
+                            "pathology": torch.tensor(sample['pathology'])
                             }
         }
         #  check if files exist
@@ -194,10 +206,10 @@ def get_mtl_siamese_dataloaders(data_config_dir, model_config_dir, fold_idx):
     dataset_train = VolumesDataset(matched_train_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=True, dataloader_config=dataloader_config)
     dataset_val = VolumesDataset(matched_val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
     dataset_test = VolumesDataset(matched_test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
-    
+
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=4)
-    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4)
-    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4)
+    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
+    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
     return train_loader, val_loader, test_loader
     
 
@@ -220,9 +232,31 @@ def fn_test_loader(loader):
     
     print(f"Example early recurrence targets: {sample_data['targets']['early_recurrence']}")
     print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
+
+    print(f"Example pathology targets: {sample_data['targets']['pathology']}")
+    print(f"Unique pathology targets in batch: {torch.unique(sample_data['targets']['pathology'])}")
+
+    print(f"Example demographic info: {sample_data['demographic_info']}")
+    print(f"Example demographic info shape: {sample_data['demographic_info'].shape}")
+    
     # for batch in loader:
     #     print(f"Batch base features shape: {batch['base_img'].shape}")
     #     print(f"Batch follow-up features shape: {batch['followup_img'].shape}")
+
+    # save example batch to disk for inspection as nii.gz files
+    # output_dir = Path("example_batch_output")
+    # output_dir.mkdir(exist_ok=True)
+    # for i in range(sample_data['base_img'].shape[0]):
+    #     base_img = sample_data['base_img'][i].numpy().squeeze()
+    #     followup_img = sample_data['followup_img'][i].numpy().squeeze()
+    #     base_seg = sample_data['base_seg'][i].numpy().squeeze()
+    #     followup_seg = sample_data['followup_seg'][i].numpy().squeeze()
+
+    #     # save as nii.gz files
+    #     nib.save(nib.Nifti1Image(base_img, affine=np.eye(4)), output_dir / f"example_base_img_{i}.nii.gz")
+    #     nib.save(nib.Nifti1Image(followup_img, affine=np.eye(4)), output_dir / f"example_followup_img_{i}.nii.gz")
+    #     nib.save(nib.Nifti1Image(base_seg, affine=np.eye(4)), output_dir / f"example_base_seg_{i}.nii.gz")
+    #     nib.save(nib.Nifti1Image(followup_seg, affine=np.eye(4)), output_dir / f"example_followup_seg_{i}.nii.gz")
 
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'

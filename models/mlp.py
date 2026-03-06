@@ -46,9 +46,13 @@ class StatisticalPoolingMLP(pl.LightningModule):
         self.lr = config['lr']
         self.max_epochs = config['max_epochs']  
 
-        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
-        self.register_buffer("class_weights", class_weights)
-        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
+        if self.target_key == "early_recurrence":
+            # class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+            class_weights = torch.tensor([0.3, 1.7], dtype=torch.float32)
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
+        else:
+            self.criterion = nn.CrossEntropyLoss()
 
         # Metrics
         self.acc = BinaryAccuracy()

@@ -1,4 +1,5 @@
 dataloaders/cached_data
+dataloaders/example_batch_output
 */__pycache__
 
 # ignore .ckpt files in all dirs

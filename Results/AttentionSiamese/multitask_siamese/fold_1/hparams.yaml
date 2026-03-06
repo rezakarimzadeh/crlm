@@ -1,0 +1,2 @@
+config_dir: ./configs/attention_siamese_config.yaml
+demographic_dim: 6

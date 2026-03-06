@@ -23,6 +23,7 @@ class AttentionMIL(nn.Module):
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
+            # nn.Dropout(0.5),
             nn.ReLU(),
             nn.Linear(hidden_dim, self.M)
         )
@@ -34,7 +35,7 @@ class AttentionMIL(nn.Module):
 
 
     def forward(self, x, pad_mask, attention=False):
-        x = self.BN(x, pad_mask)
+        # x = self.BN(x, pad_mask)
         # x: [B, T, F] 
         H = self.feature_extractor(x)  # [B, T, H]
         # H = self.attention_bn(H, pad_mask)
@@ -53,28 +54,48 @@ class Classifier(nn.Module):
         super(Classifier, self).__init__()
 
         self.classifier = nn.Sequential(
-            # nn.BatchNorm1d(input_dim),
-            nn.Linear(input_dim, hidden_dim//2),
-            # nn.BatchNorm1d(hidden_dim//2),
+            nn.BatchNorm1d(input_dim),
+            nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
-            # nn.Dropout(0.1),
-            nn.Linear(hidden_dim//2, hidden_dim//4),
-            # nn.BatchNorm1d(hidden_dim//4),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, hidden_dim//2),
+            nn.BatchNorm1d(hidden_dim//2),
             nn.ReLU(),
-            nn.Linear(hidden_dim//4, output_dim)
+            nn.Linear(hidden_dim//2, output_dim)
         )
 
     def forward(self, x):
         return self.classifier(x)
 
+class ProjectionHead(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(ProjectionHead, self).__init__()
+
+        self.projector = nn.Sequential(
+            nn.BatchNorm1d(input_dim),
+            nn.Linear(input_dim, hidden_dim),
+            # nn.ReLU(),
+            # nn.BatchNorm1d(hidden_dim),
+            # nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, x):
+        return self.projector(x)
+    
 class RadiomicsMIL(pl.LightningModule):
     def __init__(self, features_dim: int, demographic_dim: int, config_dir: str, target_key: str):
         super(RadiomicsMIL, self).__init__()
         self.save_hyperparameters()
-        dim = 512 #int((4/5)*features_dim)
+        dim = 256 #int((4/5)*features_dim)
         self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
         self.classifier_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=2)
+        self.projection_head_demographic = ProjectionHead(input_dim=demographic_dim, hidden_dim=demographic_dim, output_dim=demographic_dim)
+        # self.projection_head_nodes = ProjectionHead(input_dim=dim, hidden_dim=dim, output_dim=dim)
+
+        self.ds_head_nodes = nn.Linear(2*dim, 2)
+        self.ds_head_demographic = nn.Linear(demographic_dim, 2)
 
         self.target_key = target_key
 
@@ -93,20 +114,27 @@ class RadiomicsMIL(pl.LightningModule):
         self.auroc = BinaryAUROC()
         self.f1 = BinaryF1Score()
 
-    def forward(self, batch):
+    def forward(self, batch, deep_supervision=False):
         base_emb = self.mil_model(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
         followup_emb = self.mil_model(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
-        combined_emb = torch.cat([base_emb, followup_emb, batch["demographic_info"].to(self.device)], dim=1)
+        demographic_emb = self.projection_head_demographic(batch["demographic_info"].to(self.device))
+        combined_emb = torch.cat([base_emb, followup_emb, demographic_emb], dim=1)
         logits = self.classifier_head(combined_emb)
-        return logits
+        if deep_supervision:
+            return logits, self.ds_head_nodes(torch.cat([base_emb, followup_emb], dim=1)), self.ds_head_demographic(demographic_emb)
+        else:
+            return logits
 
     def _shared_step(self, batch, stage):
-        logits = self(batch)
-        
-        # gt_label = batch["targets"]["early_recurrence"].long()
+        logits, nodes_ds, demographic_ds = self(batch, deep_supervision=True)
         gt_label = batch["targets"][self.target_key].long()
+        ds_loss = self.criterion(nodes_ds, gt_label) + self.criterion(demographic_ds, gt_label)
 
-        loss = self.criterion(logits, gt_label)
+        main_loss = self.criterion(logits, gt_label)
+        if stage == "train":
+            loss = main_loss + 0.2*ds_loss
+        else:
+            loss = main_loss
         prob_survival = torch.softmax(logits, dim=1)[:, 1]
         y_hat_response = torch.argmax(logits, dim=1)
         self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
@@ -132,7 +160,10 @@ class RadiomicsMIL(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-5)
         # return optimizer
-        scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
+        scheduler = LambdaLR(
+                    optimizer,
+                    lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / self.max_epochs)
+                )
         return [optimizer], [scheduler]
 
 

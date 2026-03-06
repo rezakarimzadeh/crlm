@@ -1,10 +1,11 @@
 
 radiomics_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/05_radiomics_features
+# radiomics_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/05_radiomics_features_HU_40_350
 extra_shape_features_dir: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/06_extra_shape_features
 batch_size: 32
 num_workers: 6
 lr: 0.01
-max_epochs: 200
+max_epochs: 1000
 
 # ============================================================
 # Radiomics feature groups for CRLM treatment-response studies

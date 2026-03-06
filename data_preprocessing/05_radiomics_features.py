@@ -108,7 +108,7 @@ def extract_lesion_radiomics(
 
     # (Optional) clip image for visualization-like HU truncation
     # img = clip_hu_ww_wl_for_radiomics(img, ww=400, wl=50)
-    img = clip_hu_for_radiomics(img, hu_min=-150, hu_max=250)
+    img = clip_hu_for_radiomics(img, hu_min=-135, hu_max=215)
 
     arr = sitk.GetArrayFromImage(msk)
     if not np.any(arr > 0):
@@ -161,7 +161,7 @@ def main(data_config_dir):
     ct_base_dir = Path(preprocessed_data_base_dir) / "04_images_resampled_marginal_cropped"
     seg_base_dir = Path(preprocessed_data_base_dir) / "04_segmentations_resampled_marginal_cropped"
 
-    output_dir = Path(preprocessed_data_base_dir) / "05_radiomics_features"
+    output_dir = Path(preprocessed_data_base_dir) / "05_radiomics_features_HU_40_350"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     seg_paths = sorted(list(seg_base_dir.rglob("*.nii.gz")))

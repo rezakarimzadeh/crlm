@@ -144,5 +144,8 @@ class GooglenetLSTM(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
         # return optimizer
-        scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
+        scheduler = LambdaLR(
+                    optimizer,
+                    lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / self.max_epochs)
+                )
         return [optimizer], [scheduler]

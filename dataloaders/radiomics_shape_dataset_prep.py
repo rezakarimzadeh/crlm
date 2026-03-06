@@ -313,7 +313,11 @@ class FastCustomDataset(Dataset):
         df["pathology_enc"] = df["Pathology"].fillna("nan").map(pathology_map).astype(int)
         df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
         df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
-
+        df["baseline_ttv"] = pd.to_numeric(df["Baseline volume ml"], errors="coerce").fillna(-1.0).astype(float)
+        df["delta_ttv_rel"] = pd.to_numeric(df["FU1 delta vol rel"], errors="coerce").fillna(-1.0).astype(float)
+        # print(df["delta_ttv_rel"].describe())
+        # print(df["delta_ttv_rel"].head())
+        # exit()
         df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
 
         osm = pd.to_numeric(df["OSm"], errors="coerce")
@@ -324,7 +328,7 @@ class FastCustomDataset(Dataset):
         rows = df.to_dict(orient="records")
         out_rows = []
         for r in rows:
-            demographic_info = [r["sex_enc"], r["age_f"], r["who_enc"], r["mutstat_enc"]]
+            demographic_info = [r["sex_enc"], r["age_f"], r["who_enc"], r["mutstat_enc"], r["baseline_ttv"], r["delta_ttv_rel"]]
             out_rows.append(
                 {
                     "patient_id": r["patient_id"],
@@ -334,8 +338,11 @@ class FastCustomDataset(Dataset):
                     "demographic_info": demographic_info,
                     "all_clinical_info": r,
                     "recist_cario5": r["recist_cario5_enc"],
+                    "baseline_ttv": r["baseline_ttv"],
+                    "delta_ttv_rel": r["delta_ttv_rel"],
                 }
             )
+
         return out_rows
 
     # ----------------------------
@@ -361,9 +368,11 @@ class FastCustomDataset(Dataset):
                 "early_recurrence": r["early_recurrence"],
                 "overall_survival_24m": r["overall_survival_24m"],
                 "demographic_info": r["demographic_info"],
-                "all clinical_info": r["all_clinical_info"],
+                "all_clinical_info": r["all_clinical_info"],
                 "pathology": r["pathology"],
                 "recist_cario5": r["recist_cario5"],
+                "baseline_ttv": r["baseline_ttv"],
+                "delta_ttv_rel": r["delta_ttv_rel"],
             }
 
         # Threads: good for CSV IO. If you see slowdown on /mnt/l, reduce to 4-8.

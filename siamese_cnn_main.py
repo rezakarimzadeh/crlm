@@ -75,6 +75,7 @@ def train_dl_model(args, fold_index: int):
             accelerator="auto",
             devices="auto",
             log_every_n_steps=1,
+            precision="16-mixed",
             )
     #  Train
     print("================= Training Configuration ================")

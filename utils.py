@@ -143,31 +143,42 @@ def mtl_test_model(model, test_loader, target_keys):
 def mtl_compute_classification_metrics(test_outputs):
     results = {}
     for target_key, test_output in test_outputs.items():
+        if 'dice' in target_key:
+            results[target_key] = np.mean(test_output)  # already computed dice scores
+            continue
+
         y_true = np.array(test_output["y_true"])
         y_pred = np.array(test_output["y_pred"])
         y_prob = np.array(test_output["y_prob"])
 
+        # minimal fix: handle empty targets
+        if len(y_true) == 0 or len(y_pred) == 0:
+            results[target_key] = {
+                'accuracy': np.nan,
+                'precision': np.nan,
+                'recall': np.nan,
+                'specificity': np.nan,
+                'f1_score': np.nan,
+                'roc_auc': np.nan
+            }
+            continue
+
         if target_key == "pathology":
-            # multiclass
             accuracy = accuracy_score(y_true, y_pred)
             precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
             recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
             f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
-            # print(f"shapes for {target_key} - y_true: {y_true.shape}, y_pred: {y_pred.shape}, y_prob: {y_prob.shape}")
             C = y_prob.shape[1]
             roc_auc = roc_auc_score(y_true, y_prob, multi_class='ovr', labels=np.arange(C))
-
-
-            specificity = 0
+            specificity = np.nan
         else:
-            # binary
             accuracy = accuracy_score(y_true, y_pred)
             precision = precision_score(y_true, y_pred, zero_division=0)
             recall = recall_score(y_true, y_pred, zero_division=0)
             f1 = f1_score(y_true, y_pred, zero_division=0)
             roc_auc = roc_auc_score(y_true, y_prob)
 
-            tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
             specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
 
         results[target_key] = {
@@ -183,10 +194,12 @@ def mtl_compute_classification_metrics(test_outputs):
 
 # RpNet3D-specific test function that calls the generic mtl test and metric functions
 
-def compute_dice(pred_probs, gt_masks, threshold=0.5):
+def compute_dice(pred_probs, gt_masks, threshold=0.5, logits=False):
     device = pred_probs.device
     gt_masks = gt_masks.to(device)
     # pred probs: [B, 1, D, H, W], gt_masks: [B, 1, D, H, W]
+    if logits:
+        pred_probs = torch.sigmoid(pred_probs)
     pred_masks = (pred_probs > threshold).float()
     gt_masks = gt_masks.float()
     intersection = (pred_masks * gt_masks).sum(dim=[1, 2, 3, 4])
@@ -218,3 +231,44 @@ def rpn3d_test_model(model, test_loader, target_key):
                 output["base_dice"].extend(compute_dice(base_seg_logits, base_seg_gt))
                 output["followup_dice"].extend(compute_dice(followup_seg_logits, followup_seg_gt))
         return output
+
+
+def attention_siamese_test_model(model, test_loader):
+    model.eval()
+    target_keys = ["early_recurrence", "overall_survival_24m", "pathology"]
+    outputs = {k: {"y_true": [], "y_pred": [], "y_prob": []} for k in target_keys}
+    outputs['pre_segmentation_dice'] = []
+    outputs['post_segmentation_dice'] = []
+    try:
+        device = model.device
+    except:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    with torch.no_grad():
+        for batch in test_loader:
+            logits = model(batch)
+
+            for target_key in batch['targets'].keys():
+                preds = torch.argmax(logits[f"classifier_logits_{target_key}"], dim=1)
+                gt = batch['targets'][target_key]
+                if target_key == "pathology":
+                    mask = gt != -1
+                    preds = preds[mask]
+                    gt = gt[mask]
+                    probs = torch.softmax(logits[f"classifier_logits_{target_key}"], dim=1)[mask]
+                    outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
+                else:
+                    # binary: store P(class=1) [B]
+                    probs = torch.softmax(logits[f"classifier_logits_{target_key}"], dim=1)[:, 1]
+                    outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
+                # print(f"Target: {target_key}, GT labels shape: {gt.shape}, Preds shape: {preds.shape}")
+                outputs[target_key]["y_pred"].extend(preds.cpu().numpy())
+                outputs[target_key]["y_true"].extend(gt.cpu().numpy())
+            # compute segmentation dice
+            base_seg_logits = logits['pre_seg_logits']
+            followup_seg_logits = logits['post_seg_logits']
+            base_seg_gt = batch['base_seg']
+            followup_seg_gt = batch['followup_seg']
+            outputs['pre_segmentation_dice'].extend(compute_dice(base_seg_logits, base_seg_gt, logits=True))
+            outputs['post_segmentation_dice'].extend(compute_dice(followup_seg_logits, followup_seg_gt, logits=True))
+    return outputs
