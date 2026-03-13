@@ -1,0 +1,137 @@
+import argparse
+import shutil
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.loggers import TensorBoardLogger
+from models.mil import MorphScoreRadiomicsMIL
+from models.mlp import MorphScoreStatisticalPoolingMLP
+from dataloaders.radiomics_shape_dataloader import get_radiomics_shape_dataloaders
+from utils import compute_classification_metrics, save_json, read_yaml
+from utils_morphresponse import MR_test_model
+from pathlib import Path
+import os
+import pandas as pd
+import argparse
+import numpy as np
+import time
+# pl.seed_everything(42)
+
+
+def get_model_class(model_name: str):
+    if model_name == "MorphScoreRadiomicsMIL":
+        return MorphScoreRadiomicsMIL
+    elif model_name == "MorphScoreStatisticalPoolingMLP":
+        return MorphScoreStatisticalPoolingMLP
+    else:
+        raise ValueError(f"Unknown model name: {model_name}")
+
+
+def train_dl_model(args, fold_index: int):
+    data_config_dir = args.data_config_dir
+    model_config_dir = args.model_config_dir
+    model_config = read_yaml(model_config_dir)
+    feature_to_include = args.feature_to_include  
+    model_name = args.model_name
+    train_loader, val_loader, test_loader = get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_index)
+
+    # define input dimension
+    sample_batch = next(iter(train_loader))
+    input_dim = sample_batch['base']['features'].shape[-1]
+    MODEL_CLASS = get_model_class(model_name)
+    model = MODEL_CLASS(features_dim=input_dim, demographic_dim=sample_batch['demographic_info'].shape[-1], config_dir=model_config_dir)
+  
+    ckpt = ModelCheckpoint(
+        monitor="val_loss",
+        mode="min",
+        save_top_k=1,         
+        save_last=True,       
+        filename="best",     
+        auto_insert_metric_name=False,
+    )
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",      # metric to monitor
+    min_delta=0.00,          # minimum change to qualify as improvement
+    patience=20,              # epochs to wait before stopping
+    verbose=True,
+    mode="min"               # "min" for loss, "max" for accuracy/AUC
+    )
+    str_included_features = "_".join(feature_to_include)
+    log_name = f"{model_name}/{str_included_features}"
+
+    save_dir = Path("Results") / log_name / f"fold_{fold_index}"
+    if save_dir.exists():
+        shutil.rmtree(save_dir, ignore_errors=True)
+        time.sleep(0.2)
+    #  TensorBoard logger
+    tb_logger = TensorBoardLogger(save_dir="Results", name=log_name, version=f"fold_{fold_index}")
+
+    #  Trainer 
+    trainer = pl.Trainer(
+            max_epochs=model_config['max_epochs'],
+            callbacks=[ckpt, early_stop_callback],
+            logger=tb_logger,
+            accelerator="auto",
+            devices="auto",
+            )
+    #  Train
+    print("================= Training Configuration ================")
+    print(f"Input feature dimension: {input_dim}, Fold: {fold_index}, included features: {args.feature_to_include}, LR: {model_config['lr']}, Max Epochs: {model_config['max_epochs']}")
+
+    trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+    print(f"Best checkpoint: {ckpt.best_model_path}")
+    #  Test
+    best_model = MODEL_CLASS.load_from_checkpoint(ckpt.best_model_path, config_dir=model_config_dir, features_dim=input_dim, demographic_dim=sample_batch['demographic_info'].shape[-1])
+    test_output = MR_test_model(best_model, test_loader)
+    classification_metrics = compute_classification_metrics(test_output)
+
+    fold_results = {'fold': fold_index, 
+                    "classification_metrics": classification_metrics, 
+                    'best_checkpoint': ckpt.best_model_path,
+                    'used_features': feature_to_include,  
+                    **test_output}
+
+    save_json(Path(save_dir) / f"results_fold_{fold_index}.json", fold_results)
+
+    return fold_results, Path("Results") / log_name 
+
+
+def fivefold_cv(args):
+    kfold_rows = []
+    model_save_path_last = None
+
+    for fold_idx in range(5):
+        results, model_save_path = train_dl_model(args, fold_idx)
+        model_save_path_last = model_save_path
+
+        classification_metrics = results["classification_metrics"]
+        # convert numpy scalars to python floats
+        kfold_rows.append({k: float(v) if v is not None else v for k, v in classification_metrics.items()})
+
+    df_kfold = pd.DataFrame(kfold_rows)
+
+    def aggregate(df):
+        return {
+            f"{c}_mean": float(df[c].mean())
+            for c in df.columns
+        } | {
+            f"{c}_std": float(df[c].std(ddof=1))
+            for c in df.columns
+        }
+
+    kfold_agg = aggregate(df_kfold)
+
+
+    save_json(model_save_path_last / "fivefold_aggregated_results.json", kfold_agg)
+
+def main():
+    parser = argparse.ArgumentParser(description="Train and evaluate models with 5-fold cross-validation.")
+    parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
+    parser.add_argument("--model_config_dir", type=str, default="./configs/radiomics_shape_model_config.yaml", help="model config file path.")
+    parser.add_argument("--feature_to_include", type=str, default=['shape', 'boundary', 'intensity', 'texture'], help="features to include.")
+    parser.add_argument("--model_name", type=str, default="MorphScoreRadiomicsMIL", choices=["MorphScoreRadiomicsMIL", "MorphScoreStatisticalPoolingMLP"], help="model name to use.")
+
+    args = parser.parse_args()
+    fivefold_cv(args)
+
+if __name__ == "__main__":
+    main()

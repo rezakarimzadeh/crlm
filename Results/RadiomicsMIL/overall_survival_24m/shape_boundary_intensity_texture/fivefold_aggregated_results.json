@@ -1,14 +1,14 @@
 {
-    "accuracy_mean": 0.6691869555911089,
-    "precision_mean": 0.6659600231639705,
-    "recall_mean": 0.9180925925925927,
-    "specificity_mean": 0.330385562150268,
-    "f1_score_mean": 0.7659074088350937,
-    "roc_auc_mean": 0.7104190538828276,
-    "accuracy_std": 0.04434588724565156,
-    "precision_std": 0.07787006837009645,
-    "recall_std": 0.07768186325833525,
-    "specificity_std": 0.15056651448419733,
-    "f1_score_std": 0.026022630720408692,
-    "roc_auc_std": 0.031044953687086988
+    "accuracy_mean": 0.6693044989352169,
+    "precision_mean": 0.6890613980793165,
+    "recall_mean": 0.8219078380706287,
+    "specificity_mean": 0.4606597324244383,
+    "f1_score_mean": 0.7455903538483003,
+    "roc_auc_mean": 0.6834498185114161,
+    "accuracy_std": 0.02998953705806079,
+    "precision_std": 0.07222557918532978,
+    "recall_std": 0.05362843080182421,
+    "specificity_std": 0.1269623746899913,
+    "f1_score_std": 0.017854931091871667,
+    "roc_auc_std": 0.06319100830728783
 }

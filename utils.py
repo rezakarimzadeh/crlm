@@ -1,10 +1,16 @@
 import yaml
 import torch 
-import numpy as np
-import os
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 from pathlib import Path
 import json
+import numpy as np
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+    confusion_matrix,
+)
 
 def read_yaml(file_path: str) -> dict:
     """Read a YAML configuration file and return its contents as a dictionary."""
@@ -70,7 +76,7 @@ def test_model(model, test_loader, target_key):
             for batch in test_loader:
                 logits = model(batch)
 
-                probs = torch.softmax(logits, dim=1)[:, 1]
+                probs = torch.softmax(logits, dim=1)
                 preds = torch.argmax(logits, dim=1)
 
                 output["y_pred"].extend(preds.cpu().numpy())
@@ -78,31 +84,83 @@ def test_model(model, test_loader, target_key):
                 output["y_true"].extend(batch['targets'][target_key].cpu().numpy())
         return output
 
+# def compute_classification_metrics(test_output):
+#     y_true = np.array(test_output["y_true"])
+#     y_pred = np.array(test_output["y_pred"])
+#     y_prob = np.array(test_output["y_prob"])
+#     accuracy = accuracy_score(y_true, y_pred)
+#     precision = precision_score(y_true, y_pred)
+#     recall = recall_score(y_true, y_pred)
+#     f1 = f1_score(y_true, y_pred)
+#     roc_auc = roc_auc_score(y_true, y_prob)
+
+#     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+#     specificity = tn / (tn + fp)
+
+#     metrics = {
+#         'accuracy': accuracy,
+#         'precision': precision,
+#         'recall': recall,
+#         'specificity': specificity,
+#         'f1_score': f1,
+#         'roc_auc': roc_auc
+#     }
+
+#     if 'base_dice' in test_output and 'followup_dice' in test_output:
+#         metrics['base_dice'] = np.mean(test_output['base_dice'])
+#         metrics['followup_dice'] = np.mean(test_output['followup_dice'])
+
+#     return metrics
+
+
+
 def compute_classification_metrics(test_output):
     y_true = np.array(test_output["y_true"])
     y_pred = np.array(test_output["y_pred"])
     y_prob = np.array(test_output["y_prob"])
-    accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-    roc_auc = roc_auc_score(y_true, y_prob)
+    # masking to handle -1 targets (missing labels)
+    mask = y_true != -1
+    y_true = y_true[mask]
+    y_pred = y_pred[mask]
+    y_prob = y_prob[mask]
+    n_classes = y_prob.shape[1] if y_prob.ndim == 2 else 2
 
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    specificity = tn / (tn + fp)
+    accuracy = accuracy_score(y_true, y_pred)
+
+    if n_classes == 2:
+        precision = precision_score(y_true, y_pred, zero_division=0)
+        recall = recall_score(y_true, y_pred, zero_division=0)
+        f1 = f1_score(y_true, y_pred, zero_division=0)
+
+        # y_prob can be shape (N,) or (N,2)
+        if y_prob.ndim == 2:
+            roc_auc = roc_auc_score(y_true, y_prob[:, 1])
+        else:
+            roc_auc = roc_auc_score(y_true, y_prob)
+
+        tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+    else:
+        precision = precision_score(y_true, y_pred, average="weighted", zero_division=0)
+        recall = recall_score(y_true, y_pred, average="weighted", zero_division=0)
+        f1 = f1_score(y_true, y_pred, average="weighted", zero_division=0)
+
+        roc_auc = roc_auc_score(y_true, y_prob, multi_class="ovr", average="weighted")
+        specificity = None  # not directly defined as a single value in multiclass
 
     metrics = {
-        'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'specificity': specificity,
-        'f1_score': f1,
-        'roc_auc': roc_auc
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "specificity": specificity,
+        "f1_score": f1,
+        "roc_auc": roc_auc,
     }
 
-    if 'base_dice' in test_output and 'followup_dice' in test_output:
-        metrics['base_dice'] = np.mean(test_output['base_dice'])
-        metrics['followup_dice'] = np.mean(test_output['followup_dice'])
+    if "base_dice" in test_output and "followup_dice" in test_output:
+        metrics["base_dice"] = np.mean(test_output["base_dice"])
+        metrics["followup_dice"] = np.mean(test_output["followup_dice"])
 
     return metrics
 

@@ -1,4 +1,4 @@
 config_dir: ./configs/radiomics_shape_model_config.yaml
-demographic_dim: 4
+demographic_dim: 6
 features_dim: 128
 target_key: early_recurrence

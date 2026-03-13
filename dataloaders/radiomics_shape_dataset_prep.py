@@ -305,7 +305,10 @@ class FastCustomDataset(Dataset):
         pathology_map = {"nan": -1,
                         "No histological response": 0,
                         "Partial histological response": 1,
-                        "Major histological response": 2}  
+                        "Major histological response": 1}  
+        
+        morph_response_map = {"No response": 0, "Optimal response": 1, "Suboptimal response": 2, "Unknown": -1}
+        morphscore_map = {"Unknown": -1, 1:0, 2:1, 3:2}
 
         # Map / coerce
         df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
@@ -315,9 +318,9 @@ class FastCustomDataset(Dataset):
         df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
         df["baseline_ttv"] = pd.to_numeric(df["Baseline volume ml"], errors="coerce").fillna(-1.0).astype(float)
         df["delta_ttv_rel"] = pd.to_numeric(df["FU1 delta vol rel"], errors="coerce").fillna(-1.0).astype(float)
-        # print(df["delta_ttv_rel"].describe())
-        # print(df["delta_ttv_rel"].head())
-        # exit()
+        df["morph_response_enc"] = df["morphresponse_best"].map(morph_response_map).fillna(-1).astype(int)
+        df["morph_score_base"] = df["morphscorebase_majority"].map(morphscore_map).fillna(-1).astype(int)
+        df["morph_score_followup"] = df["morphscorefirstfu_majority"].map(morphscore_map).fillna(-1).astype(int)
         df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
 
         osm = pd.to_numeric(df["OSm"], errors="coerce")
@@ -335,9 +338,12 @@ class FastCustomDataset(Dataset):
                     "early_recurrence": r["early_recurrence"],
                     "overall_survival_24m": r["overall_survival_24m"],
                     "pathology": r["pathology_enc"],
+                    "morph_score_base": r["morph_score_base"],
+                    "morph_score_followup": r["morph_score_followup"],
                     "demographic_info": demographic_info,
                     "all_clinical_info": r,
                     "recist_cario5": r["recist_cario5_enc"],
+                    "morph_response": r["morph_response_enc"],
                     "baseline_ttv": r["baseline_ttv"],
                     "delta_ttv_rel": r["delta_ttv_rel"],
                 }
@@ -371,6 +377,9 @@ class FastCustomDataset(Dataset):
                 "all_clinical_info": r["all_clinical_info"],
                 "pathology": r["pathology"],
                 "recist_cario5": r["recist_cario5"],
+                "morph_response": r["morph_response"],
+                "morph_score_base": r["morph_score_base"],
+                "morph_score_followup": r["morph_score_followup"],
                 "baseline_ttv": r["baseline_ttv"],
                 "delta_ttv_rel": r["delta_ttv_rel"],
             }

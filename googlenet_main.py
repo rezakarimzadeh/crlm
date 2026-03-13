@@ -1,7 +1,7 @@
 import argparse
 import shutil
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from models.googlenet_lstm import GooglenetLSTM
 from dataloaders.googlenet_dataloader import get_cnn_dataloaders
@@ -35,6 +35,15 @@ def train_dl_model(args, fold_index: int):
         filename="best",     
         auto_insert_metric_name=False,
     )
+
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",      # metric to monitor
+    min_delta=0.00,          # minimum change to qualify as improvement
+    patience=10,              # epochs to wait before stopping
+    verbose=True,
+    mode="min"               # "min" for loss, "max" for accuracy/AUC
+    )
+
     log_name = f"{model_name}/{target_key}"
 
     save_dir = Path("Results") / log_name / f"fold_{fold_index}"
@@ -47,7 +56,7 @@ def train_dl_model(args, fold_index: int):
     #  Trainer 
     trainer = pl.Trainer(
             max_epochs=model_config['max_epochs'],
-            callbacks=[ckpt],
+            callbacks=[ckpt, early_stop_callback],
             logger=tb_logger,
             accelerator="auto",
             devices="auto",
@@ -108,7 +117,7 @@ def main():
     parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
     parser.add_argument("--model_config_dir", type=str, default="./configs/googlenet_config.yaml", help="model config file path.")
     parser.add_argument("--model_name", type=str, default="GooglenetLSTM", choices=["GooglenetLSTM"], help="model name to use.")
-    parser.add_argument("--target_key", type=str, default="overall_survival_24m", choices=["early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
+    parser.add_argument("--target_key", type=str, default="pathology", choices=["pathology", "morph_response", "early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
 
     args = parser.parse_args()
     fivefold_cv(args)

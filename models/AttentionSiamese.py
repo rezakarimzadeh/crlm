@@ -429,7 +429,7 @@ class AttentionMTLLightning(pl.LightningModule):
                 self.log(f"{stage}_{target_key}_auroc", self.binary_auroc(probs, gt_label), prog_bar=False)
                 self.log(f"{stage}_{target_key}_f1", self.binary_f1(preds, gt_label))
 
-            self.log(f"{stage}_{target_key}_loss", loss, prog_bar=True)
+            self.log(f"{stage}_{target_key}_loss", base_loss, prog_bar=True)
         
         pre_seg_loss = self.seg_criterion(output_dict["pre_seg_logits"], batch["base_seg"].to(self.device))
         post_seg_loss = self.seg_criterion(output_dict["post_seg_logits"], batch["followup_seg"].to(self.device))

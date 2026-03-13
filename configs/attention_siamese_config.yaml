@@ -3,7 +3,7 @@ resize: [192, 192, 128]
 batch_size: 4
 lr: 0.001
 max_epochs: 100
-base_features: 32
+base_features: 16
 
 deep_supervision: True
 list_targets: ["early_recurrence", "overall_survival_24m", "pathology"]

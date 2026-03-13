@@ -136,7 +136,22 @@ def collate_fn(batch):
         [int(item["pathology"]) for item in batch],
         dtype=torch.long
     )
-    # -------------------------
+    morph_response = torch.tensor(
+        [int(item["morph_response"]) for item in batch],
+        dtype=torch.long
+    )
+
+    morph_score_base = torch.tensor(
+        [int(item["morph_score_base"]) for item in batch],
+        dtype=torch.long
+    )
+    
+    morph_score_followup = torch.tensor(
+        [int(item["morph_score_followup"]) for item in batch],
+        dtype=torch.long
+    )
+
+    #  -------------------------
     # Pad base & follow-up sets
     # -------------------------
     base_feat_pad, base_pad_mask, base_lab_pad = pad_lesion_set(base_feats, base_lesion_labels)
@@ -166,6 +181,9 @@ def collate_fn(batch):
             "overall_survival_24m": overall_survival_24m,  # [B]
             "recist_cario5": recist_cario5,        # [B]
             "pathology": pathology,                # [B]
+            "morph_response": morph_response,          # [B]
+            "morph_score_base": morph_score_base,          # [B]
+            "morph_score_followup": morph_score_followup,  # [B]
         },
 
         "clinical_info": clinical_info,
@@ -176,15 +194,18 @@ def print_label_statistics(prepared_dataset):
     early_recurrence_labels = []
     overall_survival_labels = []
     pathology_labels = []
+    morph_response_labels = []
     for i in range(len(prepared_dataset)):
         item = prepared_dataset[i]
         early_recurrence_labels.append(int(item["early_recurrence"]))  # or item["early_recurrence"] depending on which label you want to check
         overall_survival_labels.append(int(item["overall_survival_24m"]))
         pathology_labels.append(int(item["pathology"]))
+        morph_response_labels.append(int(item["morph_response"]))
 
     er_series = pd.Series(early_recurrence_labels)
     overall_survival_series = pd.Series(overall_survival_labels)
     pathology_series = pd.Series(pathology_labels)
+    morph_response_series = pd.Series(morph_response_labels)
 
     print("early Recurrence Label Distribution:")
     print(er_series.value_counts())
@@ -192,6 +213,8 @@ def print_label_statistics(prepared_dataset):
     print(overall_survival_series.value_counts())
     print("pathology Label Distribution:")
     print(pathology_series.value_counts())
+    print("morph_response Label Distribution:")
+    print(morph_response_series.value_counts())
 
 
 def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx):
@@ -212,7 +235,7 @@ def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_t
     dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
     print_label_statistics(dataset_test)
     
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=10, collate_fn=collate_fn)
+    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=5, collate_fn=collate_fn)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)
     test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=4, collate_fn=collate_fn)
     return train_loader, val_loader, test_loader
@@ -229,6 +252,7 @@ def fn_test_loader(loader):
     print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
     print(f"Example recist_cario5 targets: {sample_data['targets']['recist_cario5']}")
     print(f"Example pathology targets: {sample_data['targets']['pathology']}")
+    print(f"Example morph_response targets: {sample_data['targets']['morph_response']}")    
 
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'

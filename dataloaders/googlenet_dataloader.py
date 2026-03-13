@@ -33,7 +33,7 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
                 match['patient_id'] = patient_id
                 match['early_recurrence'] = match['ER (1 = yes, 0 = no)'].astype(int)
                 match['overall_survival_24m'] = (match['OSm'] > 24).astype(int)
-                match['demographic_info'] = match[['mutstat_enc', 'sex_enc', 'who_enc', 'age_f']].values.tolist()
+                match['demographic_info'] = match[['mutstat_enc', 'sex_enc', 'who_enc', 'age_f', 'baseline_ttv', 'delta_ttv_rel']].values.tolist()
                 matched_rows.append(match)
         return pd.concat(matched_rows).reset_index(drop=True)
     
@@ -44,12 +44,26 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
     }
     sex_map = {"Female": 0, "Male": 1}
 
+    pathology_map = {"nan": -1,
+                        "No histological response": 0,
+                        "Partial histological response": 1,
+                        "Major histological response": 1}  
+        
+    morph_response_map = {"No response": 0, "Optimal response": 1, "Suboptimal response": 2, "Unknown": -1}
+    morphscore_map = {"Unknown": -1, 1:0, 2:1, 3:2}
     # Map / coerce
     df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
     df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
+    df["pathology_enc"] = df["Pathology"].fillna("nan").map(pathology_map).astype(int)
     df["who_enc"] = pd.to_numeric(df["WHO"], errors="coerce").fillna(-1).astype(int)
     df["age_f"] = pd.to_numeric(df["Age"], errors="coerce").fillna(-1.0).astype(float)
-    
+    df["baseline_ttv"] = pd.to_numeric(df["Baseline volume ml"], errors="coerce").fillna(-1.0).astype(float)
+    df["delta_ttv_rel"] = pd.to_numeric(df["FU1 delta vol rel"], errors="coerce").fillna(-1.0).astype(float)
+    df["morph_response_enc"] = df["morphresponse_best"].map(morph_response_map).fillna(-1).astype(int)
+    df["morph_score_base"] = df["morphscorebase_majority"].map(morphscore_map).fillna(-1).astype(int)
+    df["morph_score_followup"] = df["morphscorefirstfu_majority"].map(morphscore_map).fillna(-1).astype(int)
+    df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
+
     train_df = group_matched_indices(df, fold_img_groups['train'])
     val_df = group_matched_indices(df, fold_img_groups['val'])
     test_df = group_matched_indices(df, fold_img_groups['test'])
@@ -115,7 +129,12 @@ class GooglenetDataset(Dataset):
         patient_img_output["patient_id"] = row["patient_id"]
         patient_img_output["targets"] = {
             "early_recurrence": row["early_recurrence"],
-            "overall_survival_24m": row["overall_survival_24m"]
+            "overall_survival_24m": row["overall_survival_24m"],
+            "pathology": row["pathology_enc"],
+            "morph_response": row["morph_response_enc"],
+            "morph_score_base": row["morph_score_base"],
+            "morph_score_followup": row["morph_score_followup"],
+
         }
         patient_img_output["demographic_info"] = row["demographic_info"]
         return patient_img_output
@@ -156,7 +175,9 @@ def custom_collate_fn(batch):
         "patient_ids": [],
         "base": {"img": [], "diameters": [], "batch_idxes": []},
         "followup": {"img": [], "diameters": [], "batch_idxes": []},
-        "targets": {"early_recurrence": [], "overall_survival_24m": []},
+        "targets": {"early_recurrence": [], "overall_survival_24m": [], 
+                    "pathology": [], "morph_response": [],
+                    "morph_score_base": [], "morph_score_followup": []},
         "demographic_info": [],
     }
 
@@ -187,7 +208,10 @@ def custom_collate_fn(batch):
 
         collated_batch["targets"]["early_recurrence"].append(item["targets"]["early_recurrence"])
         collated_batch["targets"]["overall_survival_24m"].append(item["targets"]["overall_survival_24m"])
-
+        collated_batch["targets"]["pathology"].append(item["targets"]["pathology"])
+        collated_batch["targets"]["morph_response"].append(item["targets"]["morph_response"])
+        collated_batch["targets"]["morph_score_base"].append(item["targets"]["morph_score_base"])
+        collated_batch["targets"]["morph_score_followup"].append(item["targets"]["morph_score_followup"])
         collated_batch["demographic_info"].append(item["demographic_info"])
 
     # tensors (safe for empty)
@@ -203,6 +227,10 @@ def custom_collate_fn(batch):
     # IMPORTANT: CE expects Long labels
     collated_batch["targets"]["early_recurrence"] = torch.as_tensor(collated_batch["targets"]["early_recurrence"], dtype=torch.long)
     collated_batch["targets"]["overall_survival_24m"] = torch.as_tensor(collated_batch["targets"]["overall_survival_24m"], dtype=torch.long)
+    collated_batch["targets"]["pathology"] = torch.as_tensor(collated_batch["targets"]["pathology"], dtype=torch.long)
+    collated_batch["targets"]["morph_response"] = torch.as_tensor(collated_batch["targets"]["morph_response"], dtype=torch.long)
+    collated_batch["targets"]["morph_score_base"] = torch.as_tensor(collated_batch["targets"]["morph_score_base"], dtype=torch.long)
+    collated_batch["targets"]["morph_score_followup"] = torch.as_tensor(collated_batch["targets"]["morph_score_followup"], dtype=torch.long)
 
     collated_batch["demographic_info"] = torch.as_tensor(collated_batch["demographic_info"], dtype=torch.float32)
 

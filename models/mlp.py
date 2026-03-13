@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 from torch.optim.lr_scheduler import LambdaLR
-from torchmetrics.classification import BinaryAccuracy, BinaryAUROC, BinaryF1Score
+from torchmetrics.classification import (
+    BinaryAccuracy, BinaryAUROC, BinaryF1Score,
+    MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
+)
 
 
 def read_yaml_file(file_path):
@@ -20,9 +23,7 @@ class Classifier(nn.Module):
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
-            # nn.Dropout(0.1),
             nn.Linear(hidden_dim, hidden_dim//2),
-            # nn.BatchNorm1d(hidden_dim//2),
             nn.ReLU(),
             nn.Linear(hidden_dim//2, output_dim)
         )
@@ -36,28 +37,41 @@ class StatisticalPoolingMLP(pl.LightningModule):
         super(StatisticalPoolingMLP, self).__init__()
         self.save_hyperparameters()
         self.target_key = target_key
-        
+        self.multi_class = True if self.target_key == "morph_response"  else False
+        if self.multi_class:
+            output_dim = 3
+        else:
+            output_dim = 2
+
         input_dim = 2 * 4 * features_dim  + demographic_dim # statistical pooling: mean, max, min, median
         dim = 256 #int((4/5)*features_dim)
         
-        self.classifier_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=2)
+        self.classifier_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=output_dim)
 
         config = read_yaml_file(config_dir)
         self.lr = config['lr']
         self.max_epochs = config['max_epochs']  
 
         if self.target_key == "early_recurrence":
-            # class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
-            class_weights = torch.tensor([0.3, 1.7], dtype=torch.float32)
+            class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
             self.register_buffer("class_weights", class_weights)
             self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
+        elif self.target_key == "morph_response":
+            class_weights = torch.tensor([0.55, 1.42, 2.10], dtype=torch.float32)
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights)
         else:
             self.criterion = nn.CrossEntropyLoss()
 
         # Metrics
-        self.acc = BinaryAccuracy()
-        self.auroc = BinaryAUROC()
-        self.f1 = BinaryF1Score()
+        if self.multi_class:
+            self.acc = MulticlassAccuracy(num_classes=3, average='macro')
+            self.auroc = MulticlassAUROC(num_classes=3, average='macro')
+            self.f1 = MulticlassF1Score(num_classes=3, average='macro')
+        else:
+            self.acc = BinaryAccuracy()
+            self.auroc = BinaryAUROC()
+            self.f1 = BinaryF1Score()
 
     def _statistical_pooling(self, x: torch.Tensor, pad_mask: torch.Tensor):
         """
@@ -118,12 +132,152 @@ class StatisticalPoolingMLP(pl.LightningModule):
     def _shared_step(self, batch, stage):
         logits = self(batch)
         gt_label = batch["targets"][self.target_key].long()
+        # masking the outputs and labels where gt_label is -1 (indicating missing label) so they do not contribute to loss or metrics
+        mask = gt_label != -1
+        logits = logits[mask]
+        gt_label = gt_label[mask]
+        
+        if gt_label.numel() == 0:
+            return None
+        
         loss = self.criterion(logits, gt_label)
         y_hat = torch.argmax(logits, dim=1)
         self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
         self.log(f"{stage}_acc", self.acc(y_hat, gt_label), prog_bar=False)
-        self.log(f"{stage}_auroc", self.auroc(y_hat, gt_label), prog_bar=True)
         self.log(f"{stage}_f1", self.f1(y_hat, gt_label), prog_bar=False)
+        if self.multi_class:
+            probs = torch.softmax(logits, dim=1)
+            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
+        else:
+            probs = torch.softmax(logits, dim=1)[:, 1]
+            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
+        return loss
+    
+    def training_step(self, batch, batch_idx):
+        return self._shared_step(batch, "train")
+
+    def validation_step(self, batch, batch_idx):
+        self._shared_step(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        self._shared_step(batch, "test")
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        return optimizer
+        # scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
+        # return [optimizer], [scheduler]
+
+
+
+
+
+
+
+class MorphScoreStatisticalPoolingMLP(pl.LightningModule):
+    def __init__(self, features_dim: int, demographic_dim: int, config_dir: str):
+        super(MorphScoreStatisticalPoolingMLP, self).__init__()
+        self.save_hyperparameters()
+
+        output_dim = 3
+
+        input_dim = 4 * features_dim  + demographic_dim # statistical pooling: mean, max, min, median
+        dim = 256 #int((4/5)*features_dim)
+        
+        self.classifier_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=output_dim)
+
+        config = read_yaml_file(config_dir)
+        self.lr = config['lr']
+        self.max_epochs = config['max_epochs']  
+
+
+        class_weights = torch.tensor([1.15, 1.93, 0.62], dtype=torch.float32)
+        self.register_buffer("class_weights", class_weights)
+        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights)
+
+        self.acc = MulticlassAccuracy(num_classes=3, average='macro')
+        self.auroc = MulticlassAUROC(num_classes=3, average='macro')
+        self.f1 = MulticlassF1Score(num_classes=3, average='macro')
+
+
+    def _statistical_pooling(self, x: torch.Tensor, pad_mask: torch.Tensor):
+        """
+        x:        [B, T, F]
+        pad_mask: [B, T]  True = padded
+        returns:  [B, 4F] concat(mean, max, min, median)
+        """
+        B, T, F = x.shape
+        device = x.device
+        eps = 1e-8
+
+        # counts
+        valid = ~pad_mask                               # [B, T]
+        count = valid.sum(dim=1, keepdim=True)          # [B, 1]
+
+        # ---- mean (ignore pads) ----
+        x0 = x.masked_fill(pad_mask.unsqueeze(-1), 0.0) # [B, T, F]
+        mean = x0.sum(dim=1) / count.clamp_min(1)       # [B, F]
+        mean = torch.where(count > 0, mean, mean.new_zeros(B, F))
+
+        # ---- max/min (ignore pads) ----
+        # use +/-inf so pads never win; then fix all-pad rows
+        x_max = x.masked_fill(pad_mask.unsqueeze(-1), float("-inf"))
+        x_min = x.masked_fill(pad_mask.unsqueeze(-1), float("inf"))
+
+        maxv = x_max.max(dim=1).values                  # [B, F]
+        minv = x_min.min(dim=1).values                  # [B, F]
+
+        all_pad = (count == 0)                          # [B, 1]
+        maxv = torch.where(all_pad, maxv.new_zeros(B, F), maxv)
+        minv = torch.where(all_pad, minv.new_zeros(B, F), minv)
+
+        # ---- std (ignore pads) ----
+        # IMPORTANT: compute variance only over valid timesteps (pads contribute 0 weight)
+        diff = x - mean.unsqueeze(1)                    # [B, T, F]
+        diff2 = diff.square().masked_fill(pad_mask.unsqueeze(-1), 0.0)
+        var = diff2.sum(dim=1) / count.clamp_min(1)     # [B, F]
+        std = (var + eps).sqrt()
+        std = torch.where(all_pad, std.new_zeros(B, F), std)
+
+        # ---- median (ignore pads) ----
+        # nanmedian is vectorized; requires float
+        if not x.is_floating_point():
+            x = x.float()
+        x_nan = x.masked_fill(pad_mask.unsqueeze(-1), float("nan"))
+        median = torch.nanmedian(x_nan, dim=1).values   # [B, F]
+        median = torch.nan_to_num(median, nan=0.0)
+        return torch.cat([mean, maxv, minv, median], dim=1)  # [B, 4F]
+
+
+    def forward(self, batch):
+        base_emb = self._statistical_pooling(x=batch["base"]["features"].to(self.device), pad_mask=batch["base"]["pad_mask"].to(self.device))
+        followup_emb = self._statistical_pooling(x=batch["followup"]["features"].to(self.device), pad_mask=batch["followup"]["pad_mask"].to(self.device))
+        base_combined_emb = torch.cat([base_emb, batch["demographic_info"].to(self.device)], dim=1)
+        followup_combined_emb = torch.cat([followup_emb, batch["demographic_info"].to(self.device)], dim=1)
+        base_logits = self.classifier_head(base_combined_emb)
+        followup_logits = self.classifier_head(followup_combined_emb)
+        return base_logits, followup_logits
+
+    def _shared_step(self, batch, stage):
+        base_logits, followup_logits = self(batch)
+        logits = torch.cat([base_logits, followup_logits], dim=0)
+        gt_label = torch.cat([batch["targets"]["morph_score_base"].long(), batch["targets"]["morph_score_followup"].long()], dim=0)
+
+        # masking the outputs and labels where gt_label is -1 (indicating missing label) so they do not contribute to loss or metrics
+        mask = gt_label != -1
+        logits = logits[mask]
+        gt_label = gt_label[mask]
+        
+        if gt_label.numel() == 0:
+            return None
+        
+        loss = self.criterion(logits, gt_label)
+        y_hat = torch.argmax(logits, dim=1)
+        self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
+        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), prog_bar=False)
+        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), prog_bar=False)
+        probs = torch.softmax(logits, dim=1)
+        self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
         return loss
     
     def training_step(self, batch, batch_idx):
