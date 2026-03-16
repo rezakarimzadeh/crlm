@@ -1,0 +1,2 @@
+config_dir: ./configs/googlenet_config.yaml
+target_key: morph_response

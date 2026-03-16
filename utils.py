@@ -280,7 +280,7 @@ def rpn3d_test_model(model, test_loader, target_key):
                 followup_seg_gt = batch['followup_seg']
 
 
-                probs = torch.softmax(logits, dim=1)[:, 1]
+                probs = torch.softmax(logits, dim=1)
                 preds = torch.argmax(logits, dim=1)
 
                 output["y_pred"].extend(preds.cpu().numpy())

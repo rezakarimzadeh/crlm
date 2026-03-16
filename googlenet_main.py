@@ -61,6 +61,7 @@ def train_dl_model(args, fold_index: int):
             accelerator="auto",
             devices="auto",
             log_every_n_steps=1,
+            precision="16-mixed",
             )
     #  Train
     print("================= Training Configuration ================")
@@ -92,7 +93,7 @@ def fivefold_cv(args):
         model_save_path_last = model_save_path
 
         er_metrics = results["classification_metrics"]
-        er_rows.append({k: float(v) for k, v in er_metrics.items()})
+        er_rows.append({k: float(v) if v is not None else v for k, v in er_metrics.items()})
 
     df_er = pd.DataFrame(er_rows)
 

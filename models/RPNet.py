@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from torchmetrics.classification import BinaryAccuracy, BinaryAUROC, BinaryF1Score
+from torchmetrics.classification import (
+    BinaryAccuracy, BinaryAUROC, BinaryF1Score,
+    MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
+)
+import torchvision
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -194,7 +198,7 @@ class Siam3DUNetTorch(nn.Module):
         n_labels: int = 1,            # Keras n_labels=4
         n_base_filters: int = 16,
         depth: int = 5,
-        dropout_rate: float = 0.3,
+        dropout_rate: float = 0.1,
         n_segmentation_levels: int = 3,
         activation_name: str = "sigmoid",
     ):
@@ -282,26 +286,44 @@ class RPNetLightning(pl.LightningModule):
     ):
         super().__init__()
         self.save_hyperparameters()
-
+        self.w_cls = w_cls
+        self.w_seg_pre = w_seg_pre
+        self.w_seg_post = w_seg_post
 
         self.target_key = target_key
+        self.multi_class = True if self.target_key == "morph_response"  else False
+        if self.multi_class:
+            output_dim = 3
+        else:
+            output_dim = 2
 
         config = read_yaml_file(config_dir)
         self.lr = config["lr"]
         self.max_epochs = config["max_epochs"]
         self.n_base_filters = config["n_base_filters"]
 
-        self.model = Siam3DUNetTorch(n_base_filters=self.n_base_filters)
-        # Keras: binary_crossentropy on sigmoid(score)
-        self.cls_criterion = nn.CrossEntropyLoss()
+        self.model = Siam3DUNetTorch(n_base_filters=self.n_base_filters, num_classes=output_dim)
+        
+        if self.target_key == "early_recurrence":
+            class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights) 
+        elif self.target_key == "morph_response":
+            class_weights = torch.tensor([0.55, 1.42, 2.10], dtype=torch.float32)
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights)
+        else:
+            self.criterion = nn.CrossEntropyLoss()
 
-        self.w_cls = w_cls
-        self.w_seg_pre = w_seg_pre
-        self.w_seg_post = w_seg_post
-
-        self.acc = BinaryAccuracy()
-        self.auroc = BinaryAUROC()
-        self.f1 = BinaryF1Score()
+        # Metrics
+        if self.multi_class:
+            self.acc = MulticlassAccuracy(num_classes=3, average='macro')
+            self.auroc = MulticlassAUROC(num_classes=3, average='macro')
+            self.f1 = MulticlassF1Score(num_classes=3, average='macro')
+        else:
+            self.acc = BinaryAccuracy()
+            self.auroc = BinaryAUROC()
+            self.f1 = BinaryF1Score()
 
     def forward(self, batch):
         x_pre = batch["base_img"].to(self.device)        # [B,C,D,H,W]
@@ -309,15 +331,19 @@ class RPNetLightning(pl.LightningModule):
         return self.model(x_pre, x_post) # (score, mask1, mask2)
 
     def _shared_step(self, batch, stage: str):
-        score, mask_pre_pred, mask_post_pred = self(batch)  # <- CHANGED
+        logits, mask_pre_pred, mask_post_pred = self(batch)  # <- CHANGED
 
         # ----- classification -----
-        y = batch["targets"][self.target_key].to(self.device).long()
-        cls_loss = self.cls_criterion(score, y)
-
-        y_hat = torch.argmax(score, dim=1)  # [B] predicted class indices
-        prob1 = torch.softmax(score, dim=1)[:, 1]  # [B] probability of class 1
-        y_long = y.long()
+        gt_label = batch["targets"][self.target_key].long()
+        # masking the outputs and labels where gt_label is -1 (indicating missing label) so they do not contribute to loss or metrics
+        mask = gt_label != -1
+        logits = logits[mask]
+        gt_label = gt_label[mask]
+        if gt_label.numel() == 0:
+            return None
+        
+        cls_loss = self.criterion(logits, gt_label)
+        y_hat = torch.argmax(logits, dim=1)
 
         # ----- segmentation -----
         seg_pre_gt = batch["base_seg"].to(self.device).float()
@@ -336,10 +362,14 @@ class RPNetLightning(pl.LightningModule):
         self.log(f"{stage}_seg_pre_loss", seg_pre_loss, prog_bar=False, on_epoch=True)
         self.log(f"{stage}_seg_post_loss", seg_post_loss, prog_bar=False, on_epoch=True)
 
-        self.log(f"{stage}_acc", self.acc(y_hat, y_long), prog_bar=False)
-        self.log(f"{stage}_auroc", self.auroc(prob1, y_long), prog_bar=True)
-        self.log(f"{stage}_f1", self.f1(y_hat, y_long), prog_bar=False)
-
+        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), on_epoch=True)
+        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), on_epoch=True)
+        if self.multi_class:
+            probs = torch.softmax(logits, dim=1)
+            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
+        else:
+            probs = torch.softmax(logits, dim=1)[:, 1]
+            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -362,9 +392,147 @@ class RPNetLightning(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
-# -----------------------------
-# Minimal smoke test
-# -----------------------------
+
+
+class MorphScoreRPNetLightning(pl.LightningModule):
+    def __init__(
+        self,
+        config_dir: str,
+        w_cls: float = 1.0,
+        w_seg_pre: float = 0.2,
+        w_seg_post: float = 0.2,
+    ):
+        super().__init__()
+        self.save_hyperparameters()
+        self.w_cls = w_cls
+        self.w_seg_pre = w_seg_pre
+        self.w_seg_post = w_seg_post
+
+        config = read_yaml_file(config_dir)
+        self.lr = config["lr"]
+        self.max_epochs = config["max_epochs"]
+        self.n_base_filters = config["n_base_filters"]
+
+        self.model = Siam3DUNetBackbone(
+            in_channels=1,
+            n_base_filters=self.n_base_filters,
+            depth=5,
+            dropout_rate=0.1,
+            n_segmentation_levels=3,
+            n_labels=1,
+            activation_name="sigmoid",
+        )
+        
+        self.sf_conv0 = ConvINLReLU((2 ** 2) * self.n_base_filters, 32, k=3, stride=1, padding=1)  # level 2 filters
+        self.sf_conv1 = ConvINLReLU((2 ** 4) * self.n_base_filters, 32, k=3, stride=1, padding=1)  # level 4 filters
+        self.sf_conv2 = ConvINLReLU(1, 32, k=3, stride=1, padding=1)                   # seg logits channels
+
+        self.pool = nn.AdaptiveAvgPool3d(1)
+        self.score_fc = nn.Linear(32 * 3, 3)  
+        
+        class_weights = torch.tensor([1.15, 1.93, 0.62], dtype=torch.float32)
+        self.register_buffer("class_weights", class_weights)
+        self.criterion = nn.CrossEntropyLoss(weight=self.class_weights)
+
+        self.acc = MulticlassAccuracy(num_classes=3, average='macro')
+        self.auroc = MulticlassAUROC(num_classes=3, average='macro')
+        self.f1 = MulticlassF1Score(num_classes=3, average='macro')
+
+    def forward(self, batch):
+        x_pre = batch["base_img"].to(self.device)        # [B,C,D,H,W]
+        x_post = batch["followup_img"].to(self.device)   # [B,C,D,H,W]
+        r1 = self.backbone(x_pre)
+        r2 = self.backbone(x_post)
+
+        sf1_0, sf1_1, sf1_2 = r1[0], r1[1], r1[2]  # taps
+        sf2_0, sf2_1, sf2_2 = r2[0], r2[1], r2[2]
+
+        # pre
+        g0 = self.sf_conv0(sf1_0)
+        g1 = self.sf_conv1(sf1_1)
+        g2 = self.sf_conv2(sf1_2)
+
+        v0 = self.pool(g0).flatten(1)
+        v1 = self.pool(g1).flatten(1)
+        v2 = self.pool(g2).flatten(1)
+
+        v = torch.cat([v0, v1, v2], dim=1)
+        base_logits = self.score_fc(v)
+        
+        # post 
+        g0 = self.sf_conv0(sf2_0)
+        g1 = self.sf_conv1(sf2_1)
+        g2 = self.sf_conv2(sf2_2)
+
+        v0 = self.pool(g0).flatten(1)
+        v1 = self.pool(g1).flatten(1)
+        v2 = self.pool(g2).flatten(1)
+
+        v = torch.cat([v0, v1, v2], dim=1)
+        followup_logits = self.score_fc(v)
+
+        mask1 = r1[-1]  # activated mask
+        mask2 = r2[-1]
+
+        return base_logits, followup_logits, mask1, mask2
+
+    def _shared_step(self, batch, stage: str):
+        base_logits, followup_logits, mask_pre_pred, mask_post_pred = self(batch) 
+
+        logits = torch.cat([base_logits, followup_logits], dim=0)
+        gt_label = torch.cat([batch["targets"]["morph_score_base"].long(), batch["targets"]["morph_score_followup"].long()], dim=0)
+
+        # masking the outputs and labels where gt_label is -1 (indicating missing label) so they do not contribute to loss or metrics
+        mask = gt_label != -1
+        logits = logits[mask]
+        gt_label = gt_label[mask]
+        
+        if gt_label.numel() == 0:
+            return None
+        cls_loss = self.criterion(logits, gt_label)
+        y_hat = torch.argmax(logits, dim=1)
+        probs = torch.softmax(logits, dim=1)
+
+        # ----- segmentation -----
+        seg_pre_gt = batch["base_seg"].to(self.device).float()
+        seg_post_gt = batch["followup_seg"].to(self.device).float()
+
+        seg_pre_loss = soft_dice_loss(mask_pre_pred, seg_pre_gt)   
+        seg_post_loss = soft_dice_loss(mask_post_pred, seg_post_gt)  
+
+        loss = self.w_cls * cls_loss + self.w_seg_pre * seg_pre_loss + self.w_seg_post * seg_post_loss
+
+        # logging
+        self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
+        self.log(f"{stage}_cls_loss", cls_loss, prog_bar=False, on_epoch=True)
+        self.log(f"{stage}_seg_pre_loss", seg_pre_loss, prog_bar=False, on_epoch=True)
+        self.log(f"{stage}_seg_post_loss", seg_post_loss, prog_bar=False, on_epoch=True)
+
+        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), on_epoch=True)
+        self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True, on_epoch=True)
+        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), on_epoch=True)
+        return loss
+
+    def training_step(self, batch, batch_idx):
+        return self._shared_step(batch, "train")
+
+    def validation_step(self, batch, batch_idx):
+        self._shared_step(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        self._shared_step(batch, "test")
+
+    def configure_optimizers(self):
+        # Keras uses SGD(lr, momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)  # <- CHANGED
+
+        # LambdaLR expects a MULTIPLIER, not an absolute LR
+        scheduler = torch.optim.lr_scheduler.LambdaLR(
+            optimizer,
+            lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / float(self.max_epochs))  # <- CHANGED
+        )
+        return [optimizer], [scheduler]
+
 if __name__ == "__main__":
     B, C, D, H, W = 2, 1, 64, 128, 128  # e.g., 4 MRI sequences as channels
     x_pre = torch.randn(B, C, D, H, W)
