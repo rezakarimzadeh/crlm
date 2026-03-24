@@ -1,0 +1,144 @@
+Fold 0: Train=333, Val=84, Test=84
+Preparing dataset:   0%|          | 0/333 [00:00<?, ?it/s]Preparing dataset:   0%|          | 1/333 [00:00<01:17,  4.26it/s]Preparing dataset:   1%|          | 4/333 [00:00<00:24, 13.17it/s]Preparing dataset:   2%|▏         | 6/333 [00:00<00:21, 15.02it/s]Preparing dataset:   3%|▎         | 9/333 [00:00<00:24, 12.97it/s]Preparing dataset:   4%|▍         | 14/333 [00:00<00:16, 19.81it/s]Preparing dataset:   5%|▌         | 17/333 [00:01<00:22, 14.04it/s]Preparing dataset:   6%|▌         | 19/333 [00:01<00:23, 13.60it/s]Preparing dataset:   7%|▋         | 24/333 [00:01<00:16, 18.97it/s]Preparing dataset:   8%|▊         | 27/333 [00:01<00:20, 15.13it/s]Preparing dataset:   9%|▉         | 31/333 [00:01<00:16, 18.21it/s]Preparing dataset:  10%|█         | 34/333 [00:02<00:20, 14.29it/s]Preparing dataset:  11%|█▏        | 38/333 [00:02<00:16, 18.15it/s]Preparing dataset:  12%|█▏        | 41/333 [00:02<00:20, 14.28it/s]Preparing dataset:  13%|█▎        | 44/333 [00:02<00:18, 15.79it/s]Preparing dataset:  15%|█▍        | 49/333 [00:03<00:18, 15.69it/s]Preparing dataset:  16%|█▌        | 53/333 [00:03<00:14, 18.73it/s]Preparing dataset:  17%|█▋        | 56/333 [00:03<00:14, 19.76it/s]Preparing dataset:  18%|█▊        | 59/333 [00:03<00:16, 16.96it/s]Preparing dataset:  19%|█▊        | 62/333 [00:03<00:14, 18.07it/s]Preparing dataset:  20%|█▉        | 65/333 [00:04<00:17, 15.00it/s]Preparing dataset:  20%|██        | 68/333 [00:04<00:15, 17.34it/s]Preparing dataset:  22%|██▏       | 72/333 [00:04<00:12, 20.69it/s]Preparing dataset:  23%|██▎       | 75/333 [00:04<00:17, 14.47it/s]Preparing dataset:  24%|██▍       | 81/333 [00:04<00:15, 16.49it/s]Preparing dataset:  25%|██▌       | 84/333 [00:05<00:14, 17.47it/s]Preparing dataset:  26%|██▌       | 87/333 [00:05<00:12, 18.96it/s]Preparing dataset:  27%|██▋       | 90/333 [00:05<00:13, 17.58it/s]Preparing dataset:  28%|██▊       | 92/333 [00:05<00:13, 17.67it/s]Preparing dataset:  29%|██▊       | 95/333 [00:05<00:11, 19.86it/s]Preparing dataset:  29%|██▉       | 98/333 [00:05<00:11, 20.28it/s]Preparing dataset:  31%|███       | 102/333 [00:06<00:11, 20.92it/s]Preparing dataset:  32%|███▏      | 105/333 [00:06<00:12, 17.55it/s]Preparing dataset:  32%|███▏      | 108/333 [00:06<00:12, 17.51it/s]Preparing dataset:  33%|███▎      | 111/333 [00:06<00:12, 17.97it/s]Preparing dataset:  34%|███▍      | 113/333 [00:06<00:12, 17.54it/s]Preparing dataset:  35%|███▍      | 115/333 [00:06<00:14, 15.20it/s]Preparing dataset:  35%|███▌      | 118/333 [00:06<00:11, 18.03it/s]Preparing dataset:  36%|███▋      | 121/333 [00:07<00:11, 19.18it/s]Preparing dataset:  37%|███▋      | 124/333 [00:07<00:15, 13.23it/s]Preparing dataset:  39%|███▊      | 129/333 [00:07<00:12, 16.68it/s]Preparing dataset:  40%|███▉      | 132/333 [00:07<00:12, 16.44it/s]Preparing dataset:  41%|████      | 136/333 [00:08<00:09, 19.85it/s]Preparing dataset:  42%|████▏     | 139/333 [00:08<00:13, 14.85it/s]Preparing dataset:  43%|████▎     | 143/333 [00:08<00:10, 18.44it/s]Preparing dataset:  44%|████▍     | 146/333 [00:08<00:11, 15.85it/s]Preparing dataset:  45%|████▌     | 150/333 [00:08<00:09, 18.31it/s]Preparing dataset:  46%|████▌     | 153/333 [00:09<00:10, 17.49it/s]Preparing dataset:  47%|████▋     | 155/333 [00:09<00:10, 17.11it/s]Preparing dataset:  47%|████▋     | 158/333 [00:09<00:09, 19.18it/s]Preparing dataset:  48%|████▊     | 161/333 [00:09<00:10, 15.79it/s]Preparing dataset:  50%|████▉     | 165/333 [00:09<00:08, 18.71it/s]Preparing dataset:  51%|█████     | 169/333 [00:10<00:10, 15.80it/s]Preparing dataset:  52%|█████▏    | 172/333 [00:10<00:08, 17.93it/s]Preparing dataset:  53%|█████▎    | 177/333 [00:10<00:08, 19.06it/s]Preparing dataset:  54%|█████▍    | 180/333 [00:10<00:08, 18.97it/s]Preparing dataset:  55%|█████▍    | 183/333 [00:10<00:07, 20.71it/s]Preparing dataset:  56%|█████▌    | 186/333 [00:10<00:08, 17.39it/s]Preparing dataset:  56%|█████▋    | 188/333 [00:11<00:09, 15.31it/s]Preparing dataset:  57%|█████▋    | 191/333 [00:11<00:08, 16.96it/s]Preparing dataset:  58%|█████▊    | 194/333 [00:11<00:07, 17.60it/s]Preparing dataset:  59%|█████▉    | 196/333 [00:11<00:08, 15.67it/s]Preparing dataset:  60%|█████▉    | 199/333 [00:11<00:07, 17.30it/s]Preparing dataset:  61%|██████    | 202/333 [00:11<00:06, 19.44it/s]Preparing dataset:  62%|██████▏   | 205/333 [00:12<00:07, 16.79it/s]Preparing dataset:  63%|██████▎   | 209/333 [00:12<00:06, 19.04it/s]Preparing dataset:  64%|██████▎   | 212/333 [00:12<00:06, 18.23it/s]Preparing dataset:  64%|██████▍   | 214/333 [00:12<00:06, 17.87it/s]Preparing dataset:  65%|██████▍   | 216/333 [00:12<00:06, 17.09it/s]Preparing dataset:  66%|██████▌   | 219/333 [00:12<00:06, 16.89it/s]Preparing dataset:  67%|██████▋   | 222/333 [00:12<00:05, 19.00it/s]Preparing dataset:  67%|██████▋   | 224/333 [00:13<00:06, 16.33it/s]Preparing dataset:  68%|██████▊   | 227/333 [00:13<00:06, 17.46it/s]Preparing dataset:  69%|██████▉   | 230/333 [00:13<00:05, 19.80it/s]Preparing dataset:  70%|██████▉   | 233/333 [00:13<00:05, 17.25it/s]Preparing dataset:  71%|███████   | 236/333 [00:13<00:05, 18.19it/s]Preparing dataset:  72%|███████▏  | 239/333 [00:14<00:06, 14.76it/s]Preparing dataset:  73%|███████▎  | 244/333 [00:14<00:04, 20.27it/s]Preparing dataset:  74%|███████▍  | 247/333 [00:14<00:05, 16.30it/s]Preparing dataset:  75%|███████▌  | 251/333 [00:14<00:04, 19.76it/s]Preparing dataset:  77%|███████▋  | 255/333 [00:14<00:04, 18.97it/s]Preparing dataset:  77%|███████▋  | 258/333 [00:14<00:03, 20.23it/s]Preparing dataset:  79%|███████▉  | 264/333 [00:15<00:02, 27.40it/s]Preparing dataset:  80%|████████  | 268/333 [00:15<00:02, 21.78it/s]Preparing dataset:  82%|████████▏ | 272/333 [00:15<00:02, 25.01it/s]Preparing dataset:  83%|████████▎ | 276/333 [00:15<00:02, 19.93it/s]Preparing dataset:  84%|████████▍ | 279/333 [00:15<00:02, 20.78it/s]Preparing dataset:  85%|████████▍ | 282/333 [00:15<00:02, 20.82it/s]Preparing dataset:  86%|████████▌ | 285/333 [00:16<00:02, 19.65it/s]Preparing dataset:  86%|████████▋ | 288/333 [00:16<00:02, 21.12it/s]Preparing dataset:  87%|████████▋ | 291/333 [00:16<00:02, 17.50it/s]Preparing dataset:  88%|████████▊ | 294/333 [00:16<00:01, 19.56it/s]Preparing dataset:  89%|████████▉ | 297/333 [00:16<00:01, 18.91it/s]Preparing dataset:  90%|█████████ | 300/333 [00:17<00:01, 16.60it/s]Preparing dataset:  91%|█████████▏| 304/333 [00:17<00:01, 20.01it/s]Preparing dataset:  92%|█████████▏| 307/333 [00:17<00:01, 16.81it/s]Preparing dataset:  93%|█████████▎| 310/333 [00:17<00:01, 18.69it/s]Preparing dataset:  94%|█████████▍| 313/333 [00:17<00:01, 17.24it/s]Preparing dataset:  95%|█████████▍| 316/333 [00:17<00:00, 18.97it/s]Preparing dataset:  96%|█████████▌| 319/333 [00:17<00:00, 19.73it/s]Preparing dataset:  97%|█████████▋| 322/333 [00:18<00:00, 18.97it/s]Preparing dataset:  98%|█████████▊| 325/333 [00:18<00:00, 20.34it/s]Preparing dataset: 100%|██████████| 333/333 [00:18<00:00, 18.13it/s]
+morph_score Label Distribution:
+ 2    345
+ 0    194
+ 1    104
+-1     13
+Name: count, dtype: int64
+Preparing dataset:   0%|          | 0/84 [00:00<?, ?it/s]Preparing dataset:   1%|          | 1/84 [00:00<00:26,  3.13it/s]Preparing dataset:  10%|▉         | 8/84 [00:00<00:03, 22.49it/s]Preparing dataset:  14%|█▍        | 12/84 [00:00<00:04, 15.41it/s]Preparing dataset:  19%|█▉        | 16/84 [00:00<00:03, 20.05it/s]Preparing dataset:  24%|██▍       | 20/84 [00:01<00:04, 15.33it/s]Preparing dataset:  27%|██▋       | 23/84 [00:01<00:03, 16.73it/s]Preparing dataset:  31%|███       | 26/84 [00:01<00:04, 13.74it/s]Preparing dataset:  35%|███▍      | 29/84 [00:01<00:03, 15.47it/s]Preparing dataset:  39%|███▉      | 33/84 [00:02<00:03, 14.89it/s]Preparing dataset:  44%|████▍     | 37/84 [00:02<00:02, 17.41it/s]Preparing dataset:  49%|████▉     | 41/84 [00:02<00:02, 17.76it/s]Preparing dataset:  52%|█████▏    | 44/84 [00:02<00:02, 18.49it/s]Preparing dataset:  58%|█████▊    | 49/84 [00:02<00:01, 24.02it/s]Preparing dataset:  62%|██████▏   | 52/84 [00:03<00:01, 18.79it/s]Preparing dataset:  65%|██████▌   | 55/84 [00:03<00:01, 20.50it/s]Preparing dataset:  70%|███████   | 59/84 [00:03<00:01, 19.65it/s]Preparing dataset:  74%|███████▍  | 62/84 [00:03<00:01, 18.58it/s]Preparing dataset:  77%|███████▋  | 65/84 [00:03<00:00, 19.75it/s]Preparing dataset:  81%|████████  | 68/84 [00:03<00:00, 18.85it/s]Preparing dataset:  86%|████████▌ | 72/84 [00:04<00:00, 18.03it/s]Preparing dataset:  88%|████████▊ | 74/84 [00:04<00:00, 18.02it/s]Preparing dataset:  94%|█████████▍| 79/84 [00:04<00:00, 23.69it/s]Preparing dataset:  98%|█████████▊| 82/84 [00:04<00:00, 22.61it/s]Preparing dataset: 100%|██████████| 84/84 [00:04<00:00, 18.70it/s]
+morph_score Label Distribution:
+ 2    90
+ 0    41
+ 1    34
+-1     1
+Name: count, dtype: int64
+Preparing dataset:   0%|          | 0/84 [00:00<?, ?it/s]Preparing dataset:   1%|          | 1/84 [00:00<00:26,  3.17it/s]Preparing dataset:   6%|▌         | 5/84 [00:00<00:06, 12.97it/s]Preparing dataset:  11%|█         | 9/84 [00:00<00:05, 13.88it/s]Preparing dataset:  14%|█▍        | 12/84 [00:00<00:04, 16.77it/s]Preparing dataset:  19%|█▉        | 16/84 [00:00<00:03, 21.63it/s]Preparing dataset:  23%|██▎       | 19/84 [00:01<00:03, 19.73it/s]Preparing dataset:  26%|██▌       | 22/84 [00:01<00:02, 20.95it/s]Preparing dataset:  30%|██▉       | 25/84 [00:01<00:02, 20.82it/s]Preparing dataset:  33%|███▎      | 28/84 [00:01<00:03, 18.63it/s]Preparing dataset:  39%|███▉      | 33/84 [00:01<00:02, 21.13it/s]Preparing dataset:  43%|████▎     | 36/84 [00:01<00:02, 21.53it/s]Preparing dataset:  49%|████▉     | 41/84 [00:02<00:01, 27.07it/s]Preparing dataset:  52%|█████▏    | 44/84 [00:02<00:01, 21.12it/s]Preparing dataset:  57%|█████▋    | 48/84 [00:02<00:01, 22.56it/s]Preparing dataset:  61%|██████    | 51/84 [00:02<00:01, 17.43it/s]Preparing dataset:  64%|██████▍   | 54/84 [00:02<00:01, 18.29it/s]Preparing dataset:  70%|███████   | 59/84 [00:03<00:01, 16.54it/s]Preparing dataset:  73%|███████▎  | 61/84 [00:03<00:01, 16.45it/s]Preparing dataset:  77%|███████▋  | 65/84 [00:03<00:00, 19.34it/s]Preparing dataset:  81%|████████  | 68/84 [00:03<00:00, 18.29it/s]Preparing dataset:  83%|████████▎ | 70/84 [00:03<00:00, 16.10it/s]Preparing dataset:  87%|████████▋ | 73/84 [00:04<00:00, 15.73it/s]Preparing dataset:  90%|█████████ | 76/84 [00:04<00:00, 16.29it/s]Preparing dataset:  93%|█████████▎| 78/84 [00:04<00:00, 16.66it/s]Preparing dataset:  96%|█████████▋| 81/84 [00:04<00:00, 19.39it/s]Preparing dataset: 100%|██████████| 84/84 [00:04<00:00, 18.89it/s]
+morph_score Label Distribution:
+ 2    90
+ 0    41
+ 1    34
+-1     1
+Name: count, dtype: int64
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+You are using a CUDA device ('NVIDIA GeForce RTX 4080 SUPER') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+  | Name            | Type               | Params | Mode  | FLOPs
+-----------------------------------------------------------------------
+0 | classifier_head | Classifier         | 167 K  | train | 0    
+1 | criterion       | CrossEntropyLoss   | 0      | train | 0    
+2 | acc             | MulticlassAccuracy | 0      | train | 0    
+3 | auroc           | MulticlassAUROC    | 0      | train | 0    
+4 | f1              | MulticlassF1Score  | 0      | train | 0    
+-----------------------------------------------------------------------
+167 K     Trainable params
+0         Non-trainable params
+167 K     Total params
+0.671     Total estimated model params size (MB)
+13        Modules in train mode
+0         Modules in eval mode
+0         Total Flops
+================= Training Configuration ================
+Input feature dimension: 128, Fold: 0, included features: ['shape', 'boundary', 'intensity', 'texture'], LR: 0.01, Max Epochs: 1000
+Sanity Checking: |          | 0/? [00:00<?, ?it/s]/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+Sanity Checking: |          | 0/? [00:00<?, ?it/s]Sanity Checking DataLoader 0:   0%|          | 0/2 [00:00<?, ?it/s]/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/utilities/data.py:79: Trying to infer the `batch_size` from an ambiguous collection. The batch size we found is 32. To avoid any miscalculations, use `self.log(..., batch_size=batch_size)`.
+Sanity Checking DataLoader 0:  50%|█████     | 1/2 [00:02<00:02,  0.34it/s]Sanity Checking DataLoader 0: 100%|██████████| 2/2 [00:03<00:00,  0.66it/s]                                                                           /home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/loops/fit_loop.py:317: The number of training batches (11) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+Training: |          | 0/? [00:00<?, ?it/s]Training: |          | 0/? [00:00<?, ?it/s]Epoch 0:   0%|          | 0/11 [00:00<?, ?it/s]Epoch 0:   9%|▉         | 1/11 [00:00<00:07,  1.43it/s]Epoch 0:   9%|▉         | 1/11 [00:00<00:07,  1.42it/s, v_num=ld_0, train_loss_step=1.080, train_auroc=0.596]Epoch 0:  18%|█▊        | 2/11 [00:00<00:03,  2.55it/s, v_num=ld_0, train_loss_step=1.080, train_auroc=0.596]Epoch 0:  18%|█▊        | 2/11 [00:00<00:03,  2.55it/s, v_num=ld_0, train_loss_step=1.480, train_auroc=0.517]Epoch 0:  27%|██▋       | 3/11 [00:00<00:02,  3.16it/s, v_num=ld_0, train_loss_step=1.480, train_auroc=0.517]Epoch 0:  27%|██▋       | 3/11 [00:00<00:02,  3.13it/s, v_num=ld_0, train_loss_step=1.390, train_auroc=0.613]Epoch 0:  36%|███▋      | 4/11 [00:01<00:01,  3.92it/s, v_num=ld_0, train_loss_step=1.390, train_auroc=0.613]Epoch 0:  36%|███▋      | 4/11 [00:01<00:01,  3.92it/s, v_num=ld_0, train_loss_step=1.230, train_auroc=0.522]Epoch 0:  45%|████▌     | 5/11 [00:01<00:01,  4.45it/s, v_num=ld_0, train_loss_step=1.230, train_auroc=0.522]Epoch 0:  45%|████▌     | 5/11 [00:01<00:01,  4.44it/s, v_num=ld_0, train_loss_step=1.140, train_auroc=0.563]Epoch 0:  55%|█████▍    | 6/11 [00:01<00:00,  5.02it/s, v_num=ld_0, train_loss_step=1.140, train_auroc=0.563]Epoch 0:  55%|█████▍    | 6/11 [00:01<00:00,  5.01it/s, v_num=ld_0, train_loss_step=1.300, train_auroc=0.529]Epoch 0:  64%|██████▎   | 7/11 [00:01<00:00,  5.60it/s, v_num=ld_0, train_loss_step=1.300, train_auroc=0.529]Epoch 0:  64%|██████▎   | 7/11 [00:01<00:00,  5.59it/s, v_num=ld_0, train_loss_step=1.110, train_auroc=0.445]Epoch 0:  73%|███████▎  | 8/11 [00:01<00:00,  6.11it/s, v_num=ld_0, train_loss_step=1.110, train_auroc=0.445]Traceback (most recent call last):
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/call.py", line 49, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 630, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path, weights_only=weights_only)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 1079, in _run
+    results = self._run_stage()
+              ^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 1123, in _run_stage
+    self.fit_loop.run()
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/loops/fit_loop.py", line 217, in run
+    self.advance()
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/loops/fit_loop.py", line 465, in advance
+    self.epoch_loop.run(self._data_fetcher)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/loops/training_epoch_loop.py", line 153, in run
+    self.advance(data_fetcher)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/loops/training_epoch_loop.py", line 375, in advance
+    call._call_callback_hooks(trainer, "on_train_batch_end", batch_output, batch, batch_idx)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/call.py", line 228, in _call_callback_hooks
+    fn(trainer, trainer.lightning_module, *args, **kwargs)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/callbacks/progress/tqdm_progress.py", line 281, in on_train_batch_end
+    self.train_progress_bar.set_postfix(self.get_metrics(trainer, pl_module))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/callbacks/progress/progress_bar.py", line 201, in get_metrics
+    pbar_metrics = trainer.progress_bar_metrics
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 1734, in progress_bar_metrics
+    return self._logger_connector.progress_bar_metrics
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/connectors/logger_connector/logger_connector.py", line 263, in progress_bar_metrics
+    metrics = self.metrics["pbar"]
+              ^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/connectors/logger_connector/logger_connector.py", line 244, in metrics
+    return self.trainer._results.metrics(on_step)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py", line 492, in metrics
+    metrics["pbar"][forked_name] = convert_tensors_to_scalars(value)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/apply_func.py", line 136, in convert_tensors_to_scalars
+    return apply_to_collection(data, Tensor, to_item)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_utilities/core/apply_func.py", line 66, in apply_to_collection
+    return function(data, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/apply_func.py", line 134, in to_item
+    return value.item()
+           ^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/codes/morph_score_mil_mlp_main.py", line 137, in <module>
+    main()
+  File "/mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/codes/morph_score_mil_mlp_main.py", line 134, in main
+    fivefold_cv(args)
+  File "/mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/codes/morph_score_mil_mlp_main.py", line 103, in fivefold_cv
+    results, model_save_path = train_dl_model(args, fold_idx)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/codes/morph_score_mil_mlp_main.py", line 80, in train_dl_model
+    trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 584, in fit
+    call._call_and_handle_interrupt(
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/call.py", line 70, in _call_and_handle_interrupt
+    trainer._teardown()
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/trainer/trainer.py", line 1102, in _teardown
+    self.strategy.teardown()
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/pytorch_lightning/strategies/strategy.py", line 532, in teardown
+    _optimizers_to_device(self.optimizers, torch.device("cpu"))
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/optimizer.py", line 27, in _optimizers_to_device
+    _optimizer_to_device(opt, device)
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/optimizer.py", line 41, in _optimizer_to_device
+    v[key] = move_data_to_device(val, device)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/apply_func.py", line 110, in move_data_to_device
+    return apply_to_collection(batch, dtype=_TransferableDataType, function=batch_to)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_utilities/core/apply_func.py", line 66, in apply_to_collection
+    return function(data, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reza/miniconda3/envs/py312_crlm/lib/python3.12/site-packages/lightning_fabric/utilities/apply_func.py", line 104, in batch_to
+    data_output = data.to(device, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Epoch 0:  73%|███████▎  | 8/11 [00:06<00:02,  1.24it/s, v_num=ld_0, train_loss_step=1.110, train_auroc=0.445]

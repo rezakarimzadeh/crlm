@@ -7,6 +7,8 @@ from torchmetrics.classification import (
     BinaryAccuracy, BinaryAUROC, BinaryF1Score,
     MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
 )
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
 
 def read_yaml_file(file_path):
     import yaml
@@ -75,15 +77,59 @@ class AttentionMIL(nn.Module):
             return M, A
         return M
 
+
+class GatedAttentionMIL(nn.Module):
+    def __init__(self, input_dim, hidden_dim, M, L, dropout=0.2):
+        super().__init__()
+        self.M = M
+        self.BN = MaskedBatchNorm1d(input_dim)
+        self.feature_extractor = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            # nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            # nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            # nn.Dropout(dropout),
+            nn.Linear(hidden_dim, M),
+            # nn.LayerNorm(M),
+            # nn.ReLU(),
+            # nn.Dropout(dropout),
+        )
+
+        self.attention_V = nn.Linear(M, L)
+        self.attention_U = nn.Linear(M, L)
+        self.attention_w = nn.Linear(L, 1)
+
+    def forward(self, x, pad_mask, attention=False):
+        x = self.BN(x, pad_mask)
+        H = self.feature_extractor(x)                      # [B,T,M]
+
+        A_V = torch.tanh(self.attention_V(H))
+        A_U = torch.sigmoid(self.attention_U(H))
+        A = self.attention_w(A_V * A_U).squeeze(-1)       # [B,T]
+
+        A = A.masked_fill(pad_mask, -1e9)
+        A = torch.softmax(A, dim=1)
+
+        M = torch.bmm(A.unsqueeze(1), H).squeeze(1)       # [B,M]
+
+        if attention:
+            return M, A
+        return M
+    
+
 class Classifier(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(Classifier, self).__init__()
 
         self.classifier = nn.Sequential(
             nn.BatchNorm1d(input_dim),
+            # nn.ReLU(),
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
+            # nn.Dropout(0.05),
             nn.Linear(hidden_dim, hidden_dim//2),
             nn.ReLU(),
             nn.Linear(hidden_dim//2, output_dim)
@@ -99,7 +145,7 @@ class ProjectionHead(nn.Module):
         self.projector = nn.Sequential(
             nn.BatchNorm1d(input_dim),
             nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
+            # nn.ReLU(),
         )
 
     def forward(self, x):
@@ -117,8 +163,9 @@ class RadiomicsMIL(pl.LightningModule):
         else:
             output_dim = 2
 
-        dim = 256 #int((4/5)*features_dim)
-        self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
+        dim = features_dim*2 #int((4/5)*features_dim)
+        # self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
+        self.mil_model = GatedAttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
         self.classifier_head = Classifier(input_dim=2*dim+demographic_dim, hidden_dim=dim, output_dim=output_dim)
         self.projection_head_demographic = ProjectionHead(input_dim=demographic_dim, hidden_dim=demographic_dim, output_dim=demographic_dim)
@@ -208,7 +255,7 @@ class RadiomicsMIL(pl.LightningModule):
         self._shared_step(batch, "test")
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-5)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=1e-4)
         # return optimizer
         scheduler = LambdaLR(
                     optimizer,
@@ -269,8 +316,9 @@ class MorphScoreRadiomicsMIL(pl.LightningModule):
 
         output_dim = 3
 
-        dim = 256 #int((4/5)*features_dim)
-        self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
+        dim = features_dim*2 #int((4/5)*features_dim)
+        # self.mil_model = AttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
+        self.mil_model = GatedAttentionMIL(features_dim, hidden_dim=dim, M=dim, L=dim)
         
         self.classifier_head = Classifier(input_dim=dim+demographic_dim, hidden_dim=dim, output_dim=output_dim)
         self.projection_head_demographic = ProjectionHead(input_dim=demographic_dim, hidden_dim=demographic_dim, output_dim=demographic_dim)
@@ -344,4 +392,6 @@ class MorphScoreRadiomicsMIL(pl.LightningModule):
                     optimizer,
                     lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / self.max_epochs)
                 )
+        # scheduler = CosineAnnealingLR(optimizer, T_max=self.max_epochs, eta_min=1e-6)
+        
         return [optimizer], [scheduler]

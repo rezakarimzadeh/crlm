@@ -73,8 +73,11 @@ def main(data_config_dir):
     images_dir = base_dir / "04_images_resampled_marginal_cropped"
     segs_dir   = base_dir / "04_segmentations_resampled_marginal_cropped"
 
-    resample_spacing_mm = (1.0, 1.0, 3.0)
-    new_size = (192, 192, 128)
+    # resample_spacing_mm = (1.0, 1.0, 3.0)
+    # new_size = (192, 192, 128)
+
+    resample_spacing_mm = (2.0, 2.0, 6.0)
+    new_size = (96, 96, 64)
 
     img_groups = read_json(base_dir / "img_groups.json")
     all_segs, all_imgs = [], []
@@ -82,8 +85,12 @@ def main(data_config_dir):
         all_segs.extend(group["follow_ups_segs"] + [group["base_seg"]])
         all_imgs.extend(group["follow_ups_imgs"] + [group["base_img"]])
 
-    output_images_dir = base_dir / f"10_images_no_registration_resampled113_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
-    output_segmentations_dir = base_dir / f"10_segmentations_no_registration_resampled113_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
+    # output_images_dir = base_dir / f"10_images_no_registration_resampled113_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
+    # output_segmentations_dir = base_dir / f"10_segmentations_no_registration_resampled113_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
+
+    output_images_dir = base_dir / f"11_images_no_registration_resampled226_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
+    output_segmentations_dir = base_dir / f"11_segmentations_no_registration_resampled226_resized_{new_size[0]}_{new_size[1]}_{new_size[2]}"
+
     output_images_dir.mkdir(parents=True, exist_ok=True)
     output_segmentations_dir.mkdir(parents=True, exist_ok=True)
 

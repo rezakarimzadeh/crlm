@@ -115,7 +115,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train and evaluate models with 5-fold cross-validation.")
     parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
     parser.add_argument("--model_config_dir", type=str, default="./configs/rpnet3d_config.yaml", help="model config file path.")
-    parser.add_argument("--model_name", type=str, default="RPNet3D", choices=["RPNet3D"], help="model name to use.")
+    parser.add_argument("--model_name", type=str, default="MorphScoreRPNet3D", choices=["MorphScoreRPNet3D"], help="model name to use.")
 
     args = parser.parse_args()
     fivefold_cv(args)

@@ -129,7 +129,7 @@ def main():
     parser.add_argument("--model_config_dir", type=str, default="./configs/radiomics_shape_model_config.yaml", help="model config file path.")
     parser.add_argument("--feature_to_include", type=str, default=['shape', 'boundary', 'intensity', 'texture'], help="model name to use.")
     parser.add_argument("--model_name", type=str, default="RadiomicsMIL", choices=["RadiomicsMIL", "StatisticalPoolingMLP"], help="model name to use.")
-    parser.add_argument("--target_key", type=str, default="morph_response", choices=["pathology", "morph_response", "early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
+    parser.add_argument("--target_key", type=str, default="pathology", choices=["pathology", "morph_response", "early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
 
     args = parser.parse_args()
     fivefold_cv(args)

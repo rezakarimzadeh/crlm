@@ -134,19 +134,23 @@ class VolumesDataset(Dataset):
         ]
 
         if not train:
-            return Compose(pre)
+            # return Compose(pre)
+            return Compose(pre + [
+                EnsureTyped(keys=img_keys + seg_keys, track_meta=False)
+            ])
 
         # 2) coupled spatial augs (same random params for both keys)
         spatial = [
-            RandFlipd(keys=img_keys + seg_keys, spatial_axis=0, prob=0.10),
-            RandFlipd(keys=img_keys + seg_keys, spatial_axis=1, prob=0.10),
-            RandFlipd(keys=img_keys + seg_keys, spatial_axis=2, prob=0.10),
-            RandRotate90d(keys=img_keys + seg_keys, prob=0.10, max_k=3),
+            RandFlipd(keys=img_keys + seg_keys, spatial_axis=0, prob=0.20),
+            RandFlipd(keys=img_keys + seg_keys, spatial_axis=1, prob=0.20),
+            RandFlipd(keys=img_keys + seg_keys, spatial_axis=2, prob=0.20),
+            RandRotate90d(keys=img_keys + seg_keys, prob=0.20, max_k=3),
             RandAffined(
                 keys=img_keys + seg_keys,
                 mode=img_mode + seg_mode,  # per-key interpolation allowed
-                prob=0.1,
-                spatial_size=(192, 192, 128),
+                prob=0.2,
+                # spatial_size=(192, 192, 128),
+                spatial_size=(96, 96, 64),
                 rotate_range=(np.pi/18, np.pi/18, np.pi/18),
                 scale_range=(0.1, 0.1, 0.1),
             ),
@@ -157,17 +161,26 @@ class VolumesDataset(Dataset):
         #     RandShiftIntensityd(keys=img_keys, offsets=0.10, prob=0.10),
         # ]
 
-        return Compose(pre + spatial)
+        # return Compose(pre + spatial)
+        return Compose(pre + spatial + [
+                                EnsureTyped(keys=img_keys + seg_keys, track_meta=False)
+                            ])
 
     def _get_available_idxs(self, idx):
         sample = self.df.iloc[idx]
         case = {
-                "base_img": os.path.join(self.preprocessed_data_base_dir,"10_images_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0_0000.nii.gz"),
-                "base_seg": os.path.join(self.preprocessed_data_base_dir,"10_segmentations_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0.nii.gz"),
+                # "base_img": os.path.join(self.preprocessed_data_base_dir,"10_images_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0_0000.nii.gz"),
+                # "base_seg": os.path.join(self.preprocessed_data_base_dir,"10_segmentations_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0.nii.gz"),
 
-                "followup_img": os.path.join(self.preprocessed_data_base_dir,"10_images_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_1_0000.nii.gz"),
-                "followup_seg": os.path.join(self.preprocessed_data_base_dir,"10_segmentations_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_1.nii.gz"),
-                
+                # "followup_img": os.path.join(self.preprocessed_data_base_dir,"10_images_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_1_0000.nii.gz"),
+                # "followup_seg": os.path.join(self.preprocessed_data_base_dir,"10_segmentations_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_1.nii.gz"),
+
+                "base_img": os.path.join(self.preprocessed_data_base_dir,"11_images_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_0_0000.nii.gz"),
+                "base_seg": os.path.join(self.preprocessed_data_base_dir,"11_segmentations_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_0.nii.gz"),
+
+                "followup_img": os.path.join(self.preprocessed_data_base_dir,"11_images_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_1_0000.nii.gz"),
+                "followup_seg": os.path.join(self.preprocessed_data_base_dir,"11_segmentations_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_1.nii.gz"),
+
                 "demographic_info": torch.tensor(sample['demographic_info']),  # Example demographic info, adjust as needed
                 "targets": {"early_recurrence": torch.tensor(sample['early_recurrence']),
                             "overall_survival_24m": torch.tensor(sample['overall_survival_24m']),
@@ -206,20 +219,40 @@ def get_mtl_siamese_dataloaders(data_config_dir, model_config_dir, fold_idx):
     fold_img_groups_path = Path(preprocessed_data_base_dir) / "five_fold_cv_splits" / f"five_fold_cv_split_{fold_idx}.json"
     fold_img_groups = read_json(fold_img_groups_path)
     matched_train_df, matched_val_df, matched_test_df = match_excel_splits_with_imgroups(excel_table, fold_img_groups)
-    print(f"Fold {fold_idx}: Train={len(matched_train_df)}, Val={len(matched_val_df)}, Test={len(matched_test_df)}")
-    print("Train label distribution:")
-    print_label_statistics(matched_train_df)
-    print("Val label distribution:")
-    print_label_statistics(matched_val_df)
-    print("Test label distribution:")
-    print_label_statistics(matched_test_df)
-    dataset_train = VolumesDataset(matched_train_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=True, dataloader_config=dataloader_config)
-    dataset_val = VolumesDataset(matched_val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
-    dataset_test = VolumesDataset(matched_test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
 
-    train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=4)
-    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
-    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2)
+    train_df = pd.concat([matched_train_df.copy(), matched_val_df.copy()], axis=0, ignore_index=True)
+    val_df = matched_test_df.copy()
+    test_df = matched_test_df.copy()
+
+    print(f"Fold {fold_idx}: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    print("Train label distribution:")
+    print_label_statistics(train_df)
+    print("Val label distribution:")
+    print_label_statistics(val_df)
+    print("Test label distribution:")
+    print_label_statistics(test_df)
+    dataset_train = VolumesDataset(train_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=True, dataloader_config=dataloader_config)
+    dataset_val = VolumesDataset(val_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
+    dataset_test = VolumesDataset(test_df, preprocessed_data_base_dir=preprocessed_data_base_dir, train=False, dataloader_config=dataloader_config)
+
+    train_loader = DataLoader(  dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, 
+                                num_workers=6,
+                                pin_memory=True,
+                                persistent_workers=True,
+                                prefetch_factor=2,
+                              )
+    val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, 
+                                num_workers=4,
+                                pin_memory=True,
+                                persistent_workers=True,
+                                prefetch_factor=2,
+                                )
+    test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, 
+                                num_workers=2,
+                                pin_memory=True,
+                                persistent_workers=True,
+                                prefetch_factor=2,
+                                )
     return train_loader, val_loader, test_loader
     
 
@@ -254,19 +287,19 @@ def fn_test_loader(loader):
     #     print(f"Batch follow-up features shape: {batch['followup_img'].shape}")
 
     # save example batch to disk for inspection as nii.gz files
-    # output_dir = Path("example_batch_output")
-    # output_dir.mkdir(exist_ok=True)
-    # for i in range(sample_data['base_img'].shape[0]):
-    #     base_img = sample_data['base_img'][i].numpy().squeeze()
-    #     followup_img = sample_data['followup_img'][i].numpy().squeeze()
-    #     base_seg = sample_data['base_seg'][i].numpy().squeeze()
-    #     followup_seg = sample_data['followup_seg'][i].numpy().squeeze()
+    output_dir = Path("example_batch_output")
+    output_dir.mkdir(exist_ok=True)
+    for i in range(sample_data['base_img'].shape[0]):
+        base_img = sample_data['base_img'][i].numpy().squeeze()
+        followup_img = sample_data['followup_img'][i].numpy().squeeze()
+        base_seg = sample_data['base_seg'][i].numpy().squeeze()
+        followup_seg = sample_data['followup_seg'][i].numpy().squeeze()
 
-    #     # save as nii.gz files
-    #     nib.save(nib.Nifti1Image(base_img, affine=np.eye(4)), output_dir / f"example_base_img_{i}.nii.gz")
-    #     nib.save(nib.Nifti1Image(followup_img, affine=np.eye(4)), output_dir / f"example_followup_img_{i}.nii.gz")
-    #     nib.save(nib.Nifti1Image(base_seg, affine=np.eye(4)), output_dir / f"example_base_seg_{i}.nii.gz")
-    #     nib.save(nib.Nifti1Image(followup_seg, affine=np.eye(4)), output_dir / f"example_followup_seg_{i}.nii.gz")
+        # save as nii.gz files
+        nib.save(nib.Nifti1Image(base_img, affine=np.eye(4)), output_dir / f"example_base_img_{i}.nii.gz")
+        nib.save(nib.Nifti1Image(followup_img, affine=np.eye(4)), output_dir / f"example_followup_img_{i}.nii.gz")
+        nib.save(nib.Nifti1Image(base_seg, affine=np.eye(4)), output_dir / f"example_base_seg_{i}.nii.gz")
+        nib.save(nib.Nifti1Image(followup_seg, affine=np.eye(4)), output_dir / f"example_followup_seg_{i}.nii.gz")
 
 if __name__ == "__main__":
     data_config_dir = '../configs/data_config.yaml'

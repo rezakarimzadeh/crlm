@@ -281,8 +281,8 @@ class RPNetLightning(pl.LightningModule):
         config_dir: str,
         target_key: str,
         w_cls: float = 1.0,
-        w_seg_pre: float = 0.2,
-        w_seg_post: float = 0.2,
+        w_seg_pre: float = 1.0,
+        w_seg_post: float = 1.0,
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -331,46 +331,44 @@ class RPNetLightning(pl.LightningModule):
         return self.model(x_pre, x_post) # (score, mask1, mask2)
 
     def _shared_step(self, batch, stage: str):
-        logits, mask_pre_pred, mask_post_pred = self(batch)  # <- CHANGED
-
-        # ----- classification -----
-        gt_label = batch["targets"][self.target_key].long()
-        # masking the outputs and labels where gt_label is -1 (indicating missing label) so they do not contribute to loss or metrics
-        mask = gt_label != -1
-        logits = logits[mask]
-        gt_label = gt_label[mask]
-        if gt_label.numel() == 0:
-            return None
-        
-        cls_loss = self.criterion(logits, gt_label)
-        y_hat = torch.argmax(logits, dim=1)
+        logits, mask_pre_pred, mask_post_pred = self(batch)
 
         # ----- segmentation -----
         seg_pre_gt = batch["base_seg"].to(self.device).float()
         seg_post_gt = batch["followup_seg"].to(self.device).float()
 
-        # Your defined model outputs ACTIVATED masks (sigmoid), so use dice on probs.
-        # If your soft_dice_loss_with_logits expects logits, do NOT use it here.
-        seg_pre_loss = soft_dice_loss(mask_pre_pred, seg_pre_gt)     # <- CHANGED
-        seg_post_loss = soft_dice_loss(mask_post_pred, seg_post_gt)  # <- CHANGED
+        seg_pre_loss = soft_dice_loss(mask_pre_pred, seg_pre_gt)
+        seg_post_loss = soft_dice_loss(mask_post_pred, seg_post_gt)
 
-        loss = self.w_cls * cls_loss + self.w_seg_pre * seg_pre_loss + self.w_seg_post * seg_post_loss
+        # ----- classification -----
+        gt_label = batch["targets"][self.target_key].long().to(self.device)
+        valid_cls = gt_label != -1
 
-        # logging
-        self.log(f"{stage}_loss", loss, prog_bar=True, on_epoch=True)
-        self.log(f"{stage}_cls_loss", cls_loss, prog_bar=False, on_epoch=True)
-        self.log(f"{stage}_seg_pre_loss", seg_pre_loss, prog_bar=False, on_epoch=True)
-        self.log(f"{stage}_seg_post_loss", seg_post_loss, prog_bar=False, on_epoch=True)
+        cls_loss = torch.tensor(0.0, device=self.device)
+        total_loss = self.w_seg_pre * seg_pre_loss + self.w_seg_post * seg_post_loss
 
-        self.log(f"{stage}_acc", self.acc(y_hat, gt_label), on_epoch=True)
-        self.log(f"{stage}_f1", self.f1(y_hat, gt_label), on_epoch=True)
-        if self.multi_class:
-            probs = torch.softmax(logits, dim=1)
-            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
-        else:
-            probs = torch.softmax(logits, dim=1)[:, 1]
-            self.log(f"{stage}_auroc", self.auroc(probs, gt_label), prog_bar=True)
-        return loss
+        if valid_cls.any():
+            logits_valid = logits[valid_cls]
+            gt_valid = gt_label[valid_cls]
+            cls_loss = self.criterion(logits_valid, gt_valid)
+            total_loss = total_loss + self.w_cls * cls_loss
+
+            y_hat = torch.argmax(logits_valid, dim=1)
+            self.log(f"{stage}_acc", self.acc(y_hat, gt_valid), on_epoch=True)
+            self.log(f"{stage}_f1", self.f1(y_hat, gt_valid), on_epoch=True)
+
+            if self.multi_class:
+                probs = torch.softmax(logits_valid, dim=1)
+            else:
+                probs = torch.softmax(logits_valid, dim=1)[:, 1]
+            self.log(f"{stage}_auroc", self.auroc(probs, gt_valid), prog_bar=True, on_epoch=True)
+
+        self.log(f"{stage}_loss", total_loss, prog_bar=True, on_epoch=True)
+        self.log(f"{stage}_cls_loss", cls_loss, on_epoch=True)
+        self.log(f"{stage}_seg_pre_loss", seg_pre_loss, on_epoch=True)
+        self.log(f"{stage}_seg_post_loss", seg_post_loss, on_epoch=True)
+
+        return total_loss
 
     def training_step(self, batch, batch_idx):
         return self._shared_step(batch, "train")
@@ -441,8 +439,8 @@ class MorphScoreRPNetLightning(pl.LightningModule):
     def forward(self, batch):
         x_pre = batch["base_img"].to(self.device)        # [B,C,D,H,W]
         x_post = batch["followup_img"].to(self.device)   # [B,C,D,H,W]
-        r1 = self.backbone(x_pre)
-        r2 = self.backbone(x_post)
+        r1 = self.model(x_pre)
+        r2 = self.model(x_post)
 
         sf1_0, sf1_1, sf1_2 = r1[0], r1[1], r1[2]  # taps
         sf2_0, sf2_1, sf2_2 = r2[0], r2[1], r2[2]

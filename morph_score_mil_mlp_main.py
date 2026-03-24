@@ -127,8 +127,8 @@ def main():
     parser = argparse.ArgumentParser(description="Train and evaluate models with 5-fold cross-validation.")
     parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
     parser.add_argument("--model_config_dir", type=str, default="./configs/radiomics_shape_model_config.yaml", help="model config file path.")
-    parser.add_argument("--feature_to_include", type=str, default=['shape', 'boundary', 'intensity', 'texture'], help="features to include.")
-    parser.add_argument("--model_name", type=str, default="MorphScoreRadiomicsMIL", choices=["MorphScoreRadiomicsMIL", "MorphScoreStatisticalPoolingMLP"], help="model name to use.")
+    parser.add_argument("--feature_to_include", nargs="+", default=['shape', 'boundary', 'intensity', 'texture'], help="features to include.")
+    parser.add_argument("--model_name", type=str, default="MorphScoreStatisticalPoolingMLP", choices=["MorphScoreRadiomicsMIL", "MorphScoreStatisticalPoolingMLP"], help="model name to use.")
 
     args = parser.parse_args()
     fivefold_cv(args)

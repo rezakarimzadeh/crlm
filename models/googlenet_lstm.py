@@ -9,6 +9,7 @@ from torchmetrics.classification import (
     MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
 )
 import torchvision
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 def read_yaml_file(file_path):
     import yaml
@@ -42,6 +43,30 @@ class GoogLeNetFeature(nn.Module):
         return out
 
 
+class ResNetFeature(nn.Module):
+    """1024-d feature vector from ResNet (ResNet-50) pretrained on ImageNet."""
+    def __init__(self, pretrained=True):
+        super().__init__()
+        weights = torchvision.models.ResNet50_Weights.IMAGENET1K_V1 if pretrained else None
+
+        # IMPORTANT: with pretrained weights, aux_logits must be True
+        m = torchvision.models.resnet50(weights=weights)
+
+        # remove classifier (main head)
+        m.fc = nn.Identity()
+
+        self.model = m
+
+    def forward(self, x):  # x: [B,3,224,224]
+        out = self.model(x)
+
+        # When training AND aux_logits=True, torchvision returns GoogLeNetOutputs(logits, aux2, aux1)
+        # When eval, it returns just logits.
+        if isinstance(out, tuple) or hasattr(out, "logits"):
+            out = out.logits  # [B,1024]
+
+        return out
+    
 class GooglenetLSTM(pl.LightningModule):
     def __init__(self, config_dir: str, target_key: str):
         super(GooglenetLSTM, self).__init__()
@@ -182,11 +207,20 @@ class MorphScoreGooglenetLSTM(pl.LightningModule):
         super(MorphScoreGooglenetLSTM, self).__init__()
         self.save_hyperparameters()
         self.cnn = GoogLeNetFeature(pretrained=True)
+        # self.cnn = ResNetFeature(pretrained=True)
+        # make cnn trainable
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+        
 
         self.classifier_head = nn.Sequential(
-            nn.Linear(1024, 128),
-            nn.ReLU(inplace=True),
-            nn.Linear(128, 3),
+            nn.BatchNorm1d(1024),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            # nn.Dropout(0.1),
+            nn.Linear(512, 64),
+            nn.ReLU(),
+            nn.Linear(64, 3),
         )
 
         config = read_yaml_file(config_dir)
@@ -217,6 +251,20 @@ class MorphScoreGooglenetLSTM(pl.LightningModule):
         denom.index_add_(0, batch_idxes, diameters)
         out = out / denom.clamp_min(1e-6).unsqueeze(1)
         return out  # [B, D]
+    
+    # def avg_agg(self, emb, batch_idxes, B):
+    #     batch_idxes = torch.as_tensor(batch_idxes, device=emb.device, dtype=torch.long)
+        
+    #     out = []
+    #     for i in range(B):
+    #         mask = batch_idxes == i
+    #         if mask.any():
+    #             out.append(emb[mask].mean(dim=0))
+    #         else:
+    #             out.append(torch.zeros(emb.size(1), device=emb.device))  # fallback
+    #             print(f"Warning: No lesions for patient index {i} in this batch.")
+        
+    #     return torch.stack(out)  # [B, D]
 
     def forward(self, batch):
         
@@ -228,6 +276,9 @@ class MorphScoreGooglenetLSTM(pl.LightningModule):
 
         base_emb = self.agg(base_emb, batch["base"]["batch_idxes"].to(self.device), batch["base"]["diameters"].to(self.device), B)            # [B, 1024]
         followup_emb = self.agg(followup_emb, batch["followup"]["batch_idxes"].to(self.device), batch["followup"]["diameters"].to(self.device), B)  # [B, 1024]
+
+        # base_emb = self.avg_agg(base_emb, batch["base"]["batch_idxes"].to(self.device), B)            # [B, 1024]
+        # followup_emb = self.avg_agg(followup_emb, batch["followup"]["batch_idxes"].to(self.device), B)  # [B, 1024]
 
         base_logits = self.classifier_head(base_emb)
         followup_logits = self.classifier_head(followup_emb)
@@ -274,4 +325,18 @@ class MorphScoreGooglenetLSTM(pl.LightningModule):
                     optimizer,
                     lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / self.max_epochs)
                 )
+        # scheduler = CosineAnnealingLR(optimizer, T_max=self.max_epochs, eta_min=1e-6)
+
         return [optimizer], [scheduler]
+    
+
+class MorphScoreBaseBranch(nn.Module):
+    def __init__(self, parent_model):
+        super().__init__()
+        self.cnn = parent_model.cnn
+        self.classifier_head = parent_model.classifier_head
+
+    def forward(self, x):
+        emb = self.cnn(x)
+        logits = self.classifier_head(emb)
+        return logits

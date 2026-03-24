@@ -58,7 +58,7 @@ def train_dl_model(args, fold_index: int):
             logger=tb_logger,
             accelerator="auto",
             devices="auto",
-            log_every_n_steps=1,
+            log_every_n_steps=10,
             precision="16-mixed",
             )
     #  Train

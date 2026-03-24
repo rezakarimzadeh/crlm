@@ -38,7 +38,7 @@ def train_dl_model(args, fold_index: int):
     early_stop_callback = EarlyStopping(
     monitor="val_loss",      # metric to monitor
     min_delta=0.00,          # minimum change to qualify as improvement
-    patience=10,              # epochs to wait before stopping
+    patience=20,              # epochs to wait before stopping
     verbose=True,
     mode="min"               # "min" for loss, "max" for accuracy/AUC
     )

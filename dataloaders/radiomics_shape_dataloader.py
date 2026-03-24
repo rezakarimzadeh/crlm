@@ -195,26 +195,32 @@ def print_label_statistics(prepared_dataset):
     overall_survival_labels = []
     pathology_labels = []
     morph_response_labels = []
+    morph_score = []
     for i in range(len(prepared_dataset)):
         item = prepared_dataset[i]
         early_recurrence_labels.append(int(item["early_recurrence"]))  # or item["early_recurrence"] depending on which label you want to check
         overall_survival_labels.append(int(item["overall_survival_24m"]))
         pathology_labels.append(int(item["pathology"]))
         morph_response_labels.append(int(item["morph_response"]))
+        morph_score.append(int(item["morph_score_base"]))  
+        morph_score.append(int(item["morph_score_followup"]))
 
     er_series = pd.Series(early_recurrence_labels)
     overall_survival_series = pd.Series(overall_survival_labels)
     pathology_series = pd.Series(pathology_labels)
     morph_response_series = pd.Series(morph_response_labels)
+    morph_score_series = pd.Series(morph_score)
 
-    print("early Recurrence Label Distribution:")
-    print(er_series.value_counts())
-    print("overall survival 24m Label Distribution:")
-    print(overall_survival_series.value_counts())
-    print("pathology Label Distribution:")
-    print(pathology_series.value_counts())
-    print("morph_response Label Distribution:")
-    print(morph_response_series.value_counts())
+    # print("early Recurrence Label Distribution:")
+    # print(er_series.value_counts())
+    # print("overall survival 24m Label Distribution:")
+    # print(overall_survival_series.value_counts())
+    # print("pathology Label Distribution:")
+    # print(pathology_series.value_counts())
+    # print("morph_response Label Distribution:")
+    # print(morph_response_series.value_counts())
+    print("morph_score Label Distribution:")
+    print(morph_score_series.value_counts())
 
 
 def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_to_include, fold_idx):
@@ -227,12 +233,19 @@ def get_radiomics_shape_dataloaders(data_config_dir, model_config_dir, feature_t
     fold_img_groups_path = Path(preprocessed_data_base_dir) / "five_fold_cv_splits" / f"five_fold_cv_split_{fold_idx}.json"
     fold_img_groups = read_json(fold_img_groups_path)
     matched_train_df, matched_val_df, matched_test_df = match_excel_splits_with_imgroups(excel_table, fold_img_groups)  
-    print(f"Fold {fold_idx}: Train={len(matched_train_df)}, Val={len(matched_val_df)}, Test={len(matched_test_df)}")
-    dataset_train = FastCustomDataset(matched_train_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=True)
+    
+    train_df = pd.concat([matched_train_df.copy(), matched_val_df.copy()], axis=0, ignore_index=True)
+    val_df = matched_test_df.copy()
+    test_df = matched_test_df.copy()
+    # val_df = pd.concat([matched_val_df.copy(), matched_test_df.copy()], axis=0, ignore_index=True)
+    # test_df = pd.concat([matched_val_df.copy(), matched_test_df.copy()], axis=0, ignore_index=True)
+
+    print(f"Fold {fold_idx}: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    dataset_train = FastCustomDataset(train_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=True)
     print_label_statistics(dataset_train)
-    dataset_val = FastCustomDataset(matched_val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
+    dataset_val = FastCustomDataset(val_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
     print_label_statistics(dataset_val)
-    dataset_test = FastCustomDataset(matched_test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
+    dataset_test = FastCustomDataset(test_df, feature_to_include=feature_to_include, dataloader_config = dataloader_config, train=False)
     print_label_statistics(dataset_test)
     
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=5, collate_fn=collate_fn)

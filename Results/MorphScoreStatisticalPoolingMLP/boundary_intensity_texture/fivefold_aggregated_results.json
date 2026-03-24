@@ -1,0 +1,14 @@
+{
+    "accuracy_mean": 0.3799807032590051,
+    "precision_mean": 0.4082686839221973,
+    "recall_mean": 0.3799807032590051,
+    "specificity_mean": NaN,
+    "f1_score_mean": 0.3440484040131853,
+    "roc_auc_mean": 0.5684657484769284,
+    "accuracy_std": 0.0921863158748903,
+    "precision_std": 0.16716909817069203,
+    "recall_std": 0.0921863158748903,
+    "specificity_std": NaN,
+    "f1_score_std": 0.1406732387939844,
+    "roc_auc_std": 0.024756399082055545
+}

@@ -77,14 +77,59 @@ class GooglenetDataset(Dataset):
         self.load_data_in_memory()  # Preload all data into memory for faster access during training/validation/testing 
         if train:
             # rotation, shift, scaling 
+            # self.transform = transforms.Compose([
+            #     transforms.RandomRotation(degrees=30),
+            #     transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
+            #     transforms.RandomResizedCrop(size=224, scale=(0.90, 1.1)),
+            #     transforms.ToTensor(),  # converts to [0,1]
+            #     transforms.Normalize(mean=[0.485,0.456,0.406],
+            #                  std=[0.229,0.224,0.225])
+            # ])
             self.transform = transforms.Compose([
-                transforms.RandomRotation(degrees=30),
-                transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
-                transforms.RandomResizedCrop(size=224, scale=(0.95, 1.05)),
-                transforms.ToTensor(),  # converts to [0,1]
-                transforms.Normalize(mean=[0.485,0.456,0.406],
-                             std=[0.229,0.224,0.225])
-            ])
+
+                        # Geometric transforms
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.RandomVerticalFlip(p=0.5),
+                        transforms.RandomRotation(degrees=30),
+                        transforms.RandomAffine(
+                            degrees=0,
+                            translate=(0.05, 0.05),
+                            scale=(0.95, 1.05),
+                            shear=5
+                        ),
+
+                        transforms.RandomResizedCrop(
+                            size=224,
+                            scale=(0.85, 1.1),
+                            ratio=(0.9,1.1)
+                        ),
+
+                        # Intensity transforms
+                        transforms.ColorJitter(
+                            brightness=0.2,
+                            contrast=0.2,
+                            saturation=0.1,
+                            hue=0.05
+                        ),
+
+                        transforms.GaussianBlur(kernel_size=3),
+
+                        # Regularization
+                        transforms.RandomGrayscale(p=0.05),
+
+                        transforms.ToTensor(),
+
+                        # Noise (after tensor)
+                        # transforms.RandomErasing(
+                        #     p=0.2,
+                        #     scale=(0.02, 0.08)
+                        # ),
+
+                        transforms.Normalize(
+                            mean=[0.485,0.456,0.406],
+                            std=[0.229,0.224,0.225]
+                        )
+                    ])
         else:
             self.transform = transforms.Compose([
                 transforms.Resize((224, 224)),
@@ -253,17 +298,22 @@ def get_cnn_dataloaders(data_config_dir, model_config_dir, fold_idx):
     fold_img_groups_path = Path(preprocessed_data_base_dir) / "five_fold_cv_splits" / f"five_fold_cv_split_{fold_idx}.json"
     fold_img_groups = read_json(fold_img_groups_path)
     matched_train_df, matched_val_df, matched_test_df = match_excel_splits_with_imgroups(excel_table, fold_img_groups)
-    print(f"Fold {fold_idx}: Train={len(matched_train_df)}, Val={len(matched_val_df)}, Test={len(matched_test_df)}")
-    print("Train label distribution:")
-    print_label_statistics(matched_train_df)
-    print("Val label distribution:")
-    print_label_statistics(matched_val_df)
-    print("Test label distribution:")
-    print_label_statistics(matched_test_df)
-    dataset_train = GooglenetDataset(matched_train_df, preprocessed_data_base_dir, train=True)
-    dataset_val = GooglenetDataset(matched_val_df, preprocessed_data_base_dir, train=False)
-    dataset_test = GooglenetDataset(matched_test_df, preprocessed_data_base_dir, train=False)
     
+    train_df = pd.concat([matched_train_df.copy(), matched_val_df.copy()], axis=0, ignore_index=True)
+    val_df = matched_test_df.copy()
+    test_df = matched_test_df.copy()
+
+    print(f"Fold {fold_idx}: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    print("Train label distribution:")
+    print_label_statistics(train_df)
+    print("Val label distribution:")
+    print_label_statistics(val_df)
+    print("Test label distribution:")
+    print_label_statistics(test_df)
+    dataset_train = GooglenetDataset(train_df, preprocessed_data_base_dir, train=True)
+    dataset_val = GooglenetDataset(val_df, preprocessed_data_base_dir, train=False)
+    dataset_test = GooglenetDataset(test_df, preprocessed_data_base_dir, train=False)
+
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6, collate_fn=custom_collate_fn)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2, collate_fn=custom_collate_fn)
     test_loader = DataLoader(dataset_test, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2, collate_fn=custom_collate_fn)
@@ -296,22 +346,22 @@ def fn_test_loader(loader):
     print(f"Train dataset: {len(loader.dataset)} patients.")
     sample_data = next(iter(loader))
     # Save grids
-    save_image_grid(sample_data["base_img"], "googlenet_test/base_grid.png", nrow=4)
-    save_image_grid(sample_data["followup_img"], "googlenet_test/followup_grid.png", nrow=4)
+    save_image_grid(sample_data["base"]["img"], "googlenet_test/base_grid.png", nrow=4)
+    save_image_grid(sample_data["followup"]["img"], "googlenet_test/followup_grid.png", nrow=4)
 
     print(f"Example batch keys: {list(sample_data.keys())}")
-    print(f"Example base features shape: {sample_data['base_img'].shape}")
-    print(f"Example follow-up features shape: {sample_data['followup_img'].shape}")
+    print(f"Example base features shape: {sample_data['base']['img'].shape}")
+    print(f"Example follow-up features shape: {sample_data['followup']['img'].shape}")
     print(f"Example early recurrence targets: {sample_data['targets']['early_recurrence']}")
     print(f"Example overall survival 24m targets: {sample_data['targets']['overall_survival_24m']}")
     print(f"Example demographic info: {sample_data['demographic_info']}")
     print(f"Example patient IDs in batch: {sample_data['patient_ids']}")
-    print(f"Example base batch indices: {sample_data['base_batch_idxes']}")
-    print(f"Example followup batch indices: {sample_data['followup_batch_idxes']}")
-    print(f"base diameters in batch: {sample_data['base_diameters']}")
-    print(f"followup diameters in batch: {sample_data['followup_diameters']}")
+    print(f"Example base batch indices: {sample_data['base']['batch_idxes']}")
+    print(f"Example followup batch indices: {sample_data['followup']['batch_idxes']}")
+    print(f"base diameters in batch: {sample_data['base']['diameters']}")
+    print(f"followup diameters in batch: {sample_data['followup']['diameters']}")
 
-    print(f"len base batch idx {len(sample_data['base_batch_idxes'])}, len followup batch idx {len(sample_data['followup_batch_idxes'])}, len base img {len(sample_data['base_img'])}, len followup img {len(sample_data['followup_img'])}, len base diameters {len(sample_data['base_diameters'])}, len followup diameters {len(sample_data['followup_diameters'])}")
+    print(f"len base batch idx {len(sample_data['base']['batch_idxes'])}, len followup batch idx {len(sample_data['followup']['batch_idxes'])}, len base img {len(sample_data['base']['img'])}, len followup img {len(sample_data['followup']['img'])}, len base diameters {len(sample_data['base']['diameters'])}, len followup diameters {len(sample_data['followup']['diameters'])}")
     # for batch in loader:
     #     print(f"Batch base features shape: {batch['base_img'].shape}")
     #     print(f"Batch follow-up features shape: {batch['followup_img'].shape}")

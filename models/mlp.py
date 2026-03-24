@@ -6,6 +6,7 @@ from torchmetrics.classification import (
     BinaryAccuracy, BinaryAUROC, BinaryF1Score,
     MulticlassAccuracy, MulticlassAUROC, MulticlassF1Score
 )
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
 def read_yaml_file(file_path):
@@ -182,7 +183,7 @@ class MorphScoreStatisticalPoolingMLP(pl.LightningModule):
         output_dim = 3
 
         input_dim = 4 * features_dim  + demographic_dim # statistical pooling: mean, max, min, median
-        dim = 256 #int((4/5)*features_dim)
+        dim = features_dim*2 #int((4/5)*features_dim)
         
         self.classifier_head = Classifier(input_dim=input_dim, hidden_dim=dim, output_dim=output_dim)
 
@@ -290,7 +291,11 @@ class MorphScoreStatisticalPoolingMLP(pl.LightningModule):
         self._shared_step(batch, "test")
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
-        return optimizer
-        # scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: (self.lr/self.max_epochs)*(self.max_epochs - epoch) if epoch < self.max_epochs else 0)
-        # return [optimizer], [scheduler]
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-5)
+        # return optimizer
+        # scheduler = LambdaLR(
+        #             optimizer,
+        #             lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / self.max_epochs)
+        #         )
+        scheduler = CosineAnnealingLR(optimizer, T_max=self.max_epochs, eta_min=1e-6)
+        return [optimizer], [scheduler]
