@@ -116,7 +116,7 @@ def main():
     parser.add_argument("--data_config_dir", type=str, default="./configs/data_config.yaml", help="data config file path.")
     parser.add_argument("--model_config_dir", type=str, default="./configs/rpnet3d_config.yaml", help="model config file path.")
     parser.add_argument("--model_name", type=str, default="RPNet3D", choices=["RPNet3D"], help="model name to use.")
-    parser.add_argument("--target_key", type=str, default="pathology", choices=["pathology", "morph_response", "early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
+    parser.add_argument("--target_key", type=str, default="overall_survival_24m", choices=["pathology", "morph_response", "early_recurrence", "overall_survival_24m"], help="target key to use for classification.")
 
     args = parser.parse_args()
     fivefold_cv(args)

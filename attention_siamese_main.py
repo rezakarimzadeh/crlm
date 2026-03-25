@@ -93,12 +93,21 @@ def fivefold_cv(args):
         classification_metrics = results["classification_metrics"]
 
         row = {}
-        for target_key, metrics in classification_metrics.items():   # metrics is a dict
+        for target_key, metrics in classification_metrics.items():
             if 'dice' in target_key:
                 row[target_key] = float(metrics) if metrics is not None else float("nan")
                 continue
+
             for m_name, m_val in metrics.items():
-                row[f"{target_key}_{m_name}"] = float(m_val) if m_val is not None else float("nan")
+                if isinstance(m_val, dict):
+                    for metric_name, metric_val in m_val.items():
+                        row[f"{target_key}_{m_name}_{metric_name}"] = (
+                            float(metric_val) if metric_val is not None else float("nan")
+                        )
+                else:
+                    row[f"{target_key}_{m_name}"] = (
+                        float(m_val) if m_val is not None else float("nan")
+                    )
 
         kfold_rows.append(row)
 

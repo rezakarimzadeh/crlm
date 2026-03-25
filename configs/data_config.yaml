@@ -17,3 +17,4 @@ radiomics_min_voxels: 50
 
 excel_path: /mnt/l/Basic/divi/jstoker/slicer_pdac/Marius/Reza Morphology/data/preprocessed_data/CRLM/dataset_CAESAR_dec23_MASTER_incl morphologypathology.xlsx
 # excel_path: /home/bmep/rkkarimzadehmostafaa/crlm/preprocessed_data/dataset_CAESAR_dec23_MASTER.xlsx
+# excel_path: /home/bmep/rkkarimzadehmostafaa/crlm/preprocessed_data/dataset_CAESAR_dec23_MASTER_incl morphologypathology.xlsx

@@ -198,57 +198,57 @@ def mtl_test_model(model, test_loader, target_keys):
     return outputs
 
 
-def mtl_compute_classification_metrics(test_outputs):
-    results = {}
-    for target_key, test_output in test_outputs.items():
-        if 'dice' in target_key:
-            results[target_key] = np.mean(test_output)  # already computed dice scores
-            continue
+# def mtl_compute_classification_metrics(test_outputs):
+#     results = {}
+#     for target_key, test_output in test_outputs.items():
+#         if 'dice' in target_key:
+#             results[target_key] = np.mean(test_output)  # already computed dice scores
+#             continue
 
-        y_true = np.array(test_output["y_true"])
-        y_pred = np.array(test_output["y_pred"])
-        y_prob = np.array(test_output["y_prob"])
+#         y_true = np.array(test_output["y_true"])
+#         y_pred = np.array(test_output["y_pred"])
+#         y_prob = np.array(test_output["y_prob"])
 
-        # minimal fix: handle empty targets
-        if len(y_true) == 0 or len(y_pred) == 0:
-            results[target_key] = {
-                'accuracy': np.nan,
-                'precision': np.nan,
-                'recall': np.nan,
-                'specificity': np.nan,
-                'f1_score': np.nan,
-                'roc_auc': np.nan
-            }
-            continue
+#         # minimal fix: handle empty targets
+#         if len(y_true) == 0 or len(y_pred) == 0:
+#             results[target_key] = {
+#                 'accuracy': np.nan,
+#                 'precision': np.nan,
+#                 'recall': np.nan,
+#                 'specificity': np.nan,
+#                 'f1_score': np.nan,
+#                 'roc_auc': np.nan
+#             }
+#             continue
 
-        if target_key == "pathology":
-            accuracy = accuracy_score(y_true, y_pred)
-            precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
-            recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
-            f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
-            C = y_prob.shape[1]
-            roc_auc = roc_auc_score(y_true, y_prob, multi_class='ovr', labels=np.arange(C))
-            specificity = np.nan
-        else:
-            accuracy = accuracy_score(y_true, y_pred)
-            precision = precision_score(y_true, y_pred, zero_division=0)
-            recall = recall_score(y_true, y_pred, zero_division=0)
-            f1 = f1_score(y_true, y_pred, zero_division=0)
-            roc_auc = roc_auc_score(y_true, y_prob)
+#         if target_key == "pathology":
+#             accuracy = accuracy_score(y_true, y_pred)
+#             precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+#             recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+#             f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+#             C = y_prob.shape[1]
+#             roc_auc = roc_auc_score(y_true, y_prob, multi_class='ovr', labels=np.arange(C))
+#             specificity = np.nan
+#         else:
+#             accuracy = accuracy_score(y_true, y_pred)
+#             precision = precision_score(y_true, y_pred, zero_division=0)
+#             recall = recall_score(y_true, y_pred, zero_division=0)
+#             f1 = f1_score(y_true, y_pred, zero_division=0)
+#             roc_auc = roc_auc_score(y_true, y_prob)
 
-            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+#             tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+#             specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
 
-        results[target_key] = {
-            'accuracy': accuracy,
-            'precision': precision,
-            'recall': recall,
-            'specificity': specificity,
-            'f1_score': f1,
-            'roc_auc': roc_auc
-        }
+#         results[target_key] = {
+#             'accuracy': accuracy,
+#             'precision': precision,
+#             'recall': recall,
+#             'specificity': specificity,
+#             'f1_score': f1,
+#             'roc_auc': roc_auc
+#         }
 
-    return results
+#     return results
 
 # RpNet3D-specific test function that calls the generic mtl test and metric functions
 
@@ -292,41 +292,221 @@ def rpn3d_test_model(model, test_loader, target_key):
 
 
 def attention_siamese_test_model(model, test_loader):
+
     model.eval()
-    target_keys = ["early_recurrence", "overall_survival_24m", "pathology"]
-    outputs = {k: {"y_true": [], "y_pred": [], "y_prob": []} for k in target_keys}
-    outputs['pre_segmentation_dice'] = []
-    outputs['post_segmentation_dice'] = []
+
+    target_keys = [
+        "early_recurrence",
+        "overall_survival_24m",
+        "pathology",
+        "morph_response",
+        "morph_score"
+    ]
+
+    outputs = {
+        k: {"y_true": [], "y_pred": [], "y_prob": []}
+        for k in target_keys
+    }
+
+    outputs["morph_score"]["pre"] = {"y_true": [], "y_pred": [], "y_prob": []}
+    outputs["morph_score"]["post"] = {"y_true": [], "y_pred": [], "y_prob": []}
+
+    outputs["pre_segmentation_dice"] = []
+    outputs["post_segmentation_dice"] = []
+
     try:
         device = model.device
     except:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     with torch.no_grad():
-        for batch in test_loader:
-            logits = model(batch)
 
-            for target_key in batch['targets'].keys():
-                preds = torch.argmax(logits[f"classifier_logits_{target_key}"], dim=1)
-                gt = batch['targets'][target_key]
-                if target_key == "pathology":
-                    mask = gt != -1
-                    preds = preds[mask]
-                    gt = gt[mask]
-                    probs = torch.softmax(logits[f"classifier_logits_{target_key}"], dim=1)[mask]
+        for batch in test_loader:
+
+            output_dict = model(batch)
+
+            for target_key in target_keys:
+
+                if target_key == "morph_score":
+
+                    pre_logits = output_dict["classifier_logits_morph_score_base"]
+                    post_logits = output_dict["classifier_logits_morph_score_followup"]
+
+                    pre_gt = batch["targets"]["morph_score_base"]
+                    post_gt = batch["targets"]["morph_score_followup"]
+
+                    logits = torch.cat([pre_logits, post_logits], dim=0)
+                    gt = torch.cat([pre_gt, post_gt], dim=0)
+
+                    preds = torch.argmax(logits, dim=1)
+
+                    if logits.shape[1] > 2:
+                        probs = torch.softmax(logits, dim=1)
+                    else:
+                        probs = torch.softmax(logits, dim=1)[:, 1]
+
+                    outputs[target_key]["y_true"].extend(gt.cpu().numpy())
+                    outputs[target_key]["y_pred"].extend(preds.cpu().numpy())
                     outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
+
+                    # pre branch
+                    pre_preds = torch.argmax(pre_logits, dim=1)
+                    pre_probs = torch.softmax(pre_logits, dim=1)
+
+                    outputs[target_key]["pre"]["y_true"].extend(pre_gt.cpu().numpy())
+                    outputs[target_key]["pre"]["y_pred"].extend(pre_preds.cpu().numpy())
+                    outputs[target_key]["pre"]["y_prob"].extend(pre_probs.cpu().numpy())
+
+                    # post branch
+                    post_preds = torch.argmax(post_logits, dim=1)
+                    post_probs = torch.softmax(post_logits, dim=1)
+
+                    outputs[target_key]["post"]["y_true"].extend(post_gt.cpu().numpy())
+                    outputs[target_key]["post"]["y_pred"].extend(post_preds.cpu().numpy())
+                    outputs[target_key]["post"]["y_prob"].extend(post_probs.cpu().numpy())
+
                 else:
-                    # binary: store P(class=1) [B]
-                    probs = torch.softmax(logits[f"classifier_logits_{target_key}"], dim=1)[:, 1]
+
+                    logits = output_dict[f"classifier_logits_{target_key}"]
+                    gt = batch["targets"][target_key]
+
+                    preds = torch.argmax(logits, dim=1)
+
+                    if logits.shape[1] > 2:
+                        probs = torch.softmax(logits, dim=1)
+                    else:
+                        probs = torch.softmax(logits, dim=1)[:, 1]
+
+                    outputs[target_key]["y_true"].extend(gt.cpu().numpy())
+                    outputs[target_key]["y_pred"].extend(preds.cpu().numpy())
                     outputs[target_key]["y_prob"].extend(probs.cpu().numpy())
-                # print(f"Target: {target_key}, GT labels shape: {gt.shape}, Preds shape: {preds.shape}")
-                outputs[target_key]["y_pred"].extend(preds.cpu().numpy())
-                outputs[target_key]["y_true"].extend(gt.cpu().numpy())
-            # compute segmentation dice
-            base_seg_logits = logits['pre_seg_logits']
-            followup_seg_logits = logits['post_seg_logits']
-            base_seg_gt = batch['base_seg']
-            followup_seg_gt = batch['followup_seg']
-            outputs['pre_segmentation_dice'].extend(compute_dice(base_seg_logits, base_seg_gt, logits=True))
-            outputs['post_segmentation_dice'].extend(compute_dice(followup_seg_logits, followup_seg_gt, logits=True))
+
+            # segmentation
+            pre_seg_logits = output_dict["base_seg_logits"]
+            post_seg_logits = output_dict["followup_seg_logits"]
+
+            pre_seg_gt = batch["base_seg"]
+            post_seg_gt = batch["followup_seg"]
+
+            outputs["pre_segmentation_dice"].extend(
+                compute_dice(pre_seg_logits, pre_seg_gt, logits=True)
+            )
+
+            outputs["post_segmentation_dice"].extend(
+                compute_dice(post_seg_logits, post_seg_gt, logits=True)
+            )
+
     return outputs
+
+def mtl_compute_classification_metrics(test_outputs):
+    results = {}
+
+    for target_key, test_output in test_outputs.items():
+        if 'dice' in target_key:
+            results[target_key] = np.mean(test_output)
+            continue
+
+        # handle nested outputs for morph_score
+        if target_key == "morph_score" and "pre" in test_output and "post" in test_output:
+            sub_results = {}
+            for sub_key in ["combined", "pre", "post"]:
+                if sub_key == "combined":
+                    cur_output = {
+                        "y_true": test_output["y_true"],
+                        "y_pred": test_output["y_pred"],
+                        "y_prob": test_output["y_prob"],
+                    }
+                else:
+                    cur_output = test_output[sub_key]
+                mask = np.array(cur_output["y_true"]) != -1
+                y_true = np.array(cur_output["y_true"])[mask]
+                y_pred = np.array(cur_output["y_pred"])[mask]
+                y_prob = np.array(cur_output["y_prob"])[mask]
+
+                if len(y_true) == 0 or len(y_pred) == 0:
+                    sub_results[sub_key] = {
+                        'accuracy': np.nan,
+                        'precision': np.nan,
+                        'recall': np.nan,
+                        'specificity': np.nan,
+                        'f1_score': np.nan,
+                        'roc_auc': np.nan
+                    }
+                    continue
+
+                accuracy = accuracy_score(y_true, y_pred)
+
+                if y_prob.ndim == 2 and y_prob.shape[1] > 2:
+                    precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+                    recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+                    f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+                    roc_auc = roc_auc_score(
+                        y_true, y_prob, multi_class='ovr', labels=np.arange(y_prob.shape[1])
+                    )
+                    specificity = np.nan
+                else:
+                    precision = precision_score(y_true, y_pred, zero_division=0)
+                    recall = recall_score(y_true, y_pred, zero_division=0)
+                    f1 = f1_score(y_true, y_pred, zero_division=0)
+                    roc_auc = roc_auc_score(y_true, y_prob)
+
+                    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+                    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+                sub_results[sub_key] = {
+                    'accuracy': accuracy,
+                    'precision': precision,
+                    'recall': recall,
+                    'specificity': specificity,
+                    'f1_score': f1,
+                    'roc_auc': roc_auc
+                }
+
+            results[target_key] = sub_results
+            continue
+        
+        mask = np.array(test_output["y_true"]) != -1
+        y_true = np.array(test_output["y_true"])[mask]
+        y_pred = np.array(test_output["y_pred"])[mask]
+        y_prob = np.array(test_output["y_prob"])[mask]
+
+        if len(y_true) == 0 or len(y_pred) == 0:
+            results[target_key] = {
+                'accuracy': np.nan,
+                'precision': np.nan,
+                'recall': np.nan,
+                'specificity': np.nan,
+                'f1_score': np.nan,
+                'roc_auc': np.nan
+            }
+            continue
+
+        accuracy = accuracy_score(y_true, y_pred)
+        # print(f"Target: {target_key}, Accuracy: {accuracy:.4f}, Num samples: {len(y_true)}, y_prob: {y_prob.shape}, y_prob: {y_prob}")
+        if  y_prob.ndim == 2 and y_prob.shape[1] > 2:
+            precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+            recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+            f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+            roc_auc = roc_auc_score(
+                y_true, y_prob, multi_class='ovr', labels=np.arange(y_prob.shape[1])
+            )
+            specificity = np.nan
+        else:
+            precision = precision_score(y_true, y_pred, zero_division=0)
+            recall = recall_score(y_true, y_pred, zero_division=0)
+            f1 = f1_score(y_true, y_pred, zero_division=0)
+            roc_auc = roc_auc_score(y_true, y_prob)
+
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+        results[target_key] = {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'specificity': specificity,
+            'f1_score': f1,
+            'roc_auc': roc_auc
+        }
+
+    return results

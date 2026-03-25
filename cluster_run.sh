@@ -7,7 +7,7 @@
 #SBATCH --mem=32G               # max memory per node
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12       # max CPU cores per process
-#SBATCH --time=01-12:00         # time limit (DD-HH:MM)
+#SBATCH --time=02-23:00         # time limit (DD-HH:MM)
 #SBATCH --mail-user=r.k.m.karimzadehmostafaabadi@amsterdamumc.nl
 #SBATCH --mail-type=END
 #SBATCH --output=/scratch/bmep/mastrampel/morphology/logs/siam_%A.out

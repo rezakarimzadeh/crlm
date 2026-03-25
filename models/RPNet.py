@@ -381,12 +381,12 @@ class RPNetLightning(pl.LightningModule):
 
     def configure_optimizers(self):
         # Keras uses SGD(lr, momentum=0.9)
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)  # <- CHANGED
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=0.9) 
 
         # LambdaLR expects a MULTIPLIER, not an absolute LR
         scheduler = torch.optim.lr_scheduler.LambdaLR(
             optimizer,
-            lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / float(self.max_epochs))  # <- CHANGED
+            lr_lambda=lambda epoch: max(0.0, (self.max_epochs - epoch) / float(self.max_epochs)) 
         )
         return [optimizer], [scheduler]
 

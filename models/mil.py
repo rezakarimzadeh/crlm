@@ -255,7 +255,7 @@ class RadiomicsMIL(pl.LightningModule):
         self._shared_step(batch, "test")
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=1e-4)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-4)
         # return optimizer
         scheduler = LambdaLR(
                     optimizer,

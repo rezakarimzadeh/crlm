@@ -79,25 +79,28 @@ class Encoder(nn.Module):
         return e1, e2, e3, e4, e5
 
 class ChannelAttention(nn.Module):
-    def __init__(self, in_channels):
-        super(ChannelAttention, self).__init__()
+    def __init__(self, in_channels, reduction=8):
+        super().__init__()
+        hidden = max(4, in_channels // reduction)
+
         self.avg_pool = nn.AdaptiveAvgPool3d(1)
         self.max_pool = nn.AdaptiveMaxPool3d(1)
-           
-        # self.fc = nn.Sequential(nn.Conv3d(in_channels, in_channels//2, 1, bias=False),
-        #                        nn.ReLU(),
-        #                        nn.Conv3d(in_channels//2, in_channels, 1, bias=False))
-        self.fc = nn.Linear(in_channels, in_channels, bias=False)
+
+        self.fc = nn.Sequential(
+            nn.Linear(in_channels, hidden, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden, in_channels, bias=False)
+        )
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, features, query):
-        avg = self.avg_pool(query)
-        max = self.max_pool(query)
-        avg_out = self.fc(avg.flatten(1))  # [B, C]
-        max_out = self.fc(max.flatten(1))  # [B, C]
-        query_out = avg_out + max_out
-        attention = self.sigmoid(query_out)
-        return features * attention[:, :, None, None, None]  # [B, C, 1, 1, 1]
+        avg = self.avg_pool(query).flatten(1)
+        max_ = self.max_pool(query).flatten(1)
+
+        attn = self.fc(avg) + self.fc(max_)
+        attn = self.sigmoid(attn)
+
+        return features * attn[:, :, None, None, None]
 
 
 class SpatialAttention(nn.Module):
@@ -200,7 +203,12 @@ class CrossChannelSpatialAttentionBlock(nn.Module):
         self.channel_attention_post = ChannelAttention(dim)
         self.spatial_attention_post = SpatialAttention()
 
-        self.conv_block = ConvBlock(in_channels=3*dim, out_channels=dim)
+        # self.conv_block = ConvBlock(in_channels=3*dim, out_channels=dim)
+        self.conv_block = nn.Sequential(
+            nn.Conv3d(3*dim, dim, kernel_size=1, bias=False),
+            nn.BatchNorm3d(dim),
+            nn.ReLU(inplace=True)
+        )
         self.avg_pool = nn.AdaptiveAvgPool3d(1)
 
 
@@ -222,11 +230,12 @@ class ClassifierHead(nn.Module):
     def __init__(self, in_dim, num_classes):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(in_dim, in_dim//2),
-            nn.BatchNorm1d(in_dim//2),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_dim//2, in_dim//4),
-            nn.BatchNorm1d(in_dim//4),
+            nn.BatchNorm1d(in_dim),
+            nn.Linear(in_dim, in_dim//4),
+            # nn.BatchNorm1d(in_dim//2),
+            # nn.ReLU(inplace=True),
+            # nn.Linear(in_dim//2, in_dim//4),
+            # nn.BatchNorm1d(in_dim//4),
             nn.ReLU(inplace=True),
             nn.Linear(in_dim//4, num_classes)
         )
@@ -245,7 +254,7 @@ class SimpleClassifier(nn.Module):
     
 
 class CrossAttentionClassifier(nn.Module):
-    def __init__(self, base_feature, demographic_dim, num_classes, deep_supervision):
+    def __init__(self, base_feature, demographic_dim, num_classes):
         super(CrossAttentionClassifier, self).__init__()
 
         self.cross_attention_l1 = CrossChannelSpatialAttentionBlock(dim=base_feature)
@@ -258,12 +267,12 @@ class CrossAttentionClassifier(nn.Module):
         self.projection_head = nn.Sequential(
             nn.BatchNorm1d(demographic_dim),
             nn.Linear(demographic_dim, demographic_dim),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
         )
 
-        self.deep_supervision = deep_supervision
-        if deep_supervision:
-            self.deep_supervision_heads = nn.ModuleList([SimpleClassifier(in_dim=base_feature*(2**i), num_classes=num_classes) for i in range(5)])       
+        # self.deep_supervision = deep_supervision
+        # if deep_supervision:
+        #     self.deep_supervision_heads = nn.ModuleList([SimpleClassifier(in_dim=base_feature*(2**i), num_classes=num_classes) for i in range(5)])       
 
     def forward(self, pre_features, post_features, demographic_info):
         pre_e1, pre_e2, pre_e3, pre_e4, pre_e5 = pre_features
@@ -276,26 +285,58 @@ class CrossAttentionClassifier(nn.Module):
         attended_features = torch.cat([attended_e1, attended_e2, attended_e3, attended_e4, attended_e5], dim=1)
         combined = torch.cat([attended_features, self.projection_head(demographic_info)], dim=1)
         logits = self.classifier(combined)
-        
-        deep_supervison_logits = None
-        if self.deep_supervision:
-            deep_supervison_logits = torch.mean(torch.stack([head(attended_e) for head, attended_e in zip(self.deep_supervision_heads, [attended_e1, attended_e2, attended_e3, attended_e4, attended_e5])]), dim=0)
-        return logits, deep_supervison_logits
+        return logits
+        # deep_supervison_logits = None
+        # if self.deep_supervision:
+        #     deep_supervison_logits = torch.mean(torch.stack([head(attended_e) for head, attended_e in zip(self.deep_supervision_heads, [attended_e1, attended_e2, attended_e3, attended_e4, attended_e5])]), dim=0)
+        # return logits, deep_supervison_logits
 
+
+class SiameseBranchClassifier(nn.Module):
+    def __init__(self, base_feature, demographic_dim, num_classes):
+        super(SiameseBranchClassifier, self).__init__()
+
+        self.attention_l1 = ChannelSpatialAttentionBlock(dim=base_feature)
+        self.attention_l2 = ChannelSpatialAttentionBlock(dim=base_feature*2)
+        self.attention_l3 = ChannelSpatialAttentionBlock(dim=base_feature*4)
+        self.attention_l4 = ChannelSpatialAttentionBlock(dim=base_feature*8)
+        self.attention_l5 = ChannelSpatialAttentionBlock(dim=base_feature*16)
+        self.avg_pool = nn.AdaptiveAvgPool3d(1)
+
+        self.classifier = ClassifierHead(in_dim=31*base_feature+demographic_dim, num_classes=num_classes)
+        self.projection_head = nn.Sequential(
+            nn.BatchNorm1d(demographic_dim),
+            nn.Linear(demographic_dim, demographic_dim),
+            # nn.ReLU(inplace=True)
+        )
+
+    def forward(self, features, demographic_info):
+        e1, e2, e3, e4, e5 = features
+        attended_e1 = self.avg_pool(self.attention_l1(features=e1, query=e1)).flatten(1)
+        attended_e2 = self.avg_pool(self.attention_l2(features=e2, query=e2)).flatten(1)
+        attended_e3 = self.avg_pool(self.attention_l3(features=e3, query=e3)).flatten(1)
+        attended_e4 = self.avg_pool(self.attention_l4(features=e4, query=e4)).flatten(1)
+        attended_e5 = self.avg_pool(self.attention_l5(features=e5, query=e5)).flatten(1)
+        attended_features = torch.cat([attended_e1, attended_e2, attended_e3, attended_e4, attended_e5], dim=1)
+        combined = torch.cat([attended_features, self.projection_head(demographic_info)], dim=1)
+        logits = self.classifier(combined)
+        return logits
 
 class AttentionSiameseMTLModel(nn.Module):
-    def __init__(self, base_feature, demographic_dim, list_targets, list_num_classes, deep_supervision):
+    def __init__(self, base_feature, demographic_dim, list_targets, list_num_classes):
         super(AttentionSiameseMTLModel, self).__init__()
 
         self.encoder = Encoder(img_ch=1, base_features=base_feature)
         self.seg_decoder = SegDecoder(base_features=base_feature, output_ch=1)
 
-        self.classifiers = nn.ModuleList()
+        # self.classifiers = nn.ModuleList()
         self.list_targets = list_targets
-
-        for num_classes in list_num_classes:
-            self.classifiers.append(CrossAttentionClassifier(base_feature=base_feature, demographic_dim=demographic_dim, num_classes=num_classes, deep_supervision=deep_supervision))
-            
+        # make atribute for each target, e.g. self.classifier_early_recurrence, self.classifier_pathology, etc. based on list_targets
+        for target, num_classes in zip(self.list_targets, list_num_classes):
+            if target != "morph_score":
+                setattr(self, f"classifier_{target}", CrossAttentionClassifier(base_feature=base_feature, demographic_dim=demographic_dim, num_classes=num_classes))
+            else:
+                 setattr(self, f"classifier_{target}", SiameseBranchClassifier(base_feature=base_feature, demographic_dim=demographic_dim, num_classes=num_classes))
 
     def forward(self, pre_img, post_img, demographic_info):
         pre_features = self.encoder(pre_img)
@@ -304,13 +345,18 @@ class AttentionSiameseMTLModel(nn.Module):
         post_features = self.encoder(post_img)
         post_seg_logits = self.seg_decoder(*post_features)
         outputs = {}
-        outputs['pre_seg_logits'] = pre_seg_logits
-        outputs['post_seg_logits'] = post_seg_logits
-        for target, classifier in zip(self.list_targets, self.classifiers):
-            logits, deep_supervision_logits = classifier(pre_features, post_features, demographic_info)
-            outputs[f'classifier_logits_{target}'] = logits
-            if deep_supervision_logits is not None:
-                outputs[f'deep_supervision_logits_{target}'] = deep_supervision_logits
+        outputs['base_seg_logits'] = pre_seg_logits
+        outputs['followup_seg_logits'] = post_seg_logits
+        for target in self.list_targets:
+            classifier = getattr(self, f"classifier_{target}")
+            if target != "morph_score":
+                logits = classifier(pre_features, post_features, demographic_info)
+                outputs[f'classifier_logits_{target}'] = logits
+            else:
+                logits_pre = classifier(pre_features, demographic_info)
+                logits_post = classifier(post_features, demographic_info)
+                outputs[f'classifier_logits_{target}_base'] = logits_pre
+                outputs[f'classifier_logits_{target}_followup'] = logits_post
         return outputs
 
 
@@ -324,43 +370,79 @@ class AttentionMTLLightning(pl.LightningModule):
     def __init__(self, demographic_dim: int, config_dir: str):
         super(AttentionMTLLightning, self).__init__()
         self.save_hyperparameters()
+
         config = read_yaml_file(config_dir)
-        self.lr = config['lr']
-        self.max_epochs = config['max_epochs']
+        self.lr = config["lr"]
+        self.max_epochs = config["max_epochs"]
+        self.dwa_temperature = config.get("dwa_temperature", 2.0)
 
-        self.attention_siamese = AttentionSiameseMTLModel(base_feature=config['base_features'], 
-                                                          demographic_dim=demographic_dim, 
-                                                          list_targets=config['list_targets'], 
-                                                          list_num_classes=config['list_num_classes'], 
-                                                          deep_supervision=config['deep_supervision'])
+        self.attention_siamese = AttentionSiameseMTLModel(
+            base_feature=config["base_features"],
+            demographic_dim=demographic_dim,
+            list_targets=config["list_targets"],
+            list_num_classes=config["list_num_classes"],
+        )
 
-        self.target_keys = config['list_targets']
-        self.deep_supervision = config['deep_supervision']
-        print(f"Deep supervision enabled: {self.deep_supervision}")
-        self.deep_supervision_weight = 0.1 
+        self.target_keys = config["list_targets"]
 
-        
+        # DWA tasks
+        self.dwa_task_keys = self.target_keys + ["segmentation"]
+        self.num_tasks = len(self.dwa_task_keys)
+        self.task2idx = {k: i for i, k in enumerate(self.dwa_task_keys)}
 
-        class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
-        self.register_buffer("class_weights", class_weights)
-        self.criterion_early_recurrence = nn.CrossEntropyLoss(weight=self.class_weights) 
+        # [num_tasks, max_epochs]
+        self.register_buffer(
+            "dwa_weights",
+            torch.ones(self.num_tasks, self.max_epochs, dtype=torch.float32)
+        )
 
-        self.criterion = nn.CrossEntropyLoss()
-        self.seg_criterion = torch.nn.BCEWithLogitsLoss()
-        # ---- Kendall MTL uncertainty weighting (all tasks are classification) ----
-        all_tasks = config['list_targets'] + ["pre_segmentation", "post_segmentation"]
-        self.task2idx = {k: i for i, k in enumerate(all_tasks)}
-        # s_i = log(sigma_i^2) per task (learned)
-        self.log_vars = nn.Parameter(torch.zeros(len(all_tasks)))  # initialized to log(1) = 0, so initial sigma^2 = 1
+        # epoch-average raw losses, same idea as avg_cost in the example
+        self.register_buffer(
+            "avg_cost",
+            torch.zeros(self.max_epochs, self.num_tasks, dtype=torch.float32)
+        )
 
-        # Metrics
-        self.binary_acc = BinaryAccuracy()
-        self.binary_auroc = BinaryAUROC()
-        self.binary_f1 = BinaryF1Score()
+        # running sums for current training epoch
+        self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
+        self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
 
-        self.multi_acc = MulticlassAccuracy(num_classes=3)
-        self.multi_auroc = MulticlassAUROC(num_classes=3)
-        self.multi_f1 = MulticlassF1Score(num_classes=3, average="macro")
+        # -------- losses --------
+        for tg in self.target_keys:
+            if tg == "early_recurrence":
+                class_weights = torch.tensor([0.63, 1.37], dtype=torch.float32)
+                self.register_buffer(f"class_weights_{tg}", class_weights)
+                setattr(self, f"criterion_{tg}", nn.CrossEntropyLoss(weight=class_weights))
+
+            elif tg == "morph_response":
+                class_weights = torch.tensor([0.55, 1.42, 2.10], dtype=torch.float32)
+                self.register_buffer(f"class_weights_{tg}", class_weights)
+                setattr(self, f"criterion_{tg}", nn.CrossEntropyLoss(weight=class_weights))
+
+            elif tg == "morph_score":
+                class_weights = torch.tensor([1.15, 1.93, 0.62], dtype=torch.float32)
+                self.register_buffer(f"class_weights_{tg}", class_weights)
+                setattr(self, f"criterion_{tg}", nn.CrossEntropyLoss(weight=class_weights))
+
+            else:
+                setattr(self, f"criterion_{tg}", nn.CrossEntropyLoss())
+
+        self.seg_criterion = nn.BCEWithLogitsLoss()
+
+        # -------- metrics --------
+        self.metric_acc = nn.ModuleDict()
+        self.metric_auroc = nn.ModuleDict()
+        self.metric_f1 = nn.ModuleDict()
+
+        for tg in self.target_keys:
+            ncls = config["list_num_classes"][config["list_targets"].index(tg)]
+            if ncls > 2:
+                self.metric_acc[tg] = MulticlassAccuracy(num_classes=ncls)
+                self.metric_auroc[tg] = MulticlassAUROC(num_classes=ncls)
+                self.metric_f1[tg] = MulticlassF1Score(num_classes=ncls, average="macro")
+            else:
+                self.metric_acc[tg] = BinaryAccuracy()
+                self.metric_auroc[tg] = BinaryAUROC()
+                self.metric_f1[tg] = BinaryF1Score()
 
     def forward(self, batch):
         x_pre = batch["base_img"].to(self.device)        # [B,C,D,H,W]
@@ -369,90 +451,120 @@ class AttentionMTLLightning(pl.LightningModule):
         output_dict = self.attention_siamese(x_pre, x_post, demographic_info)
         return output_dict
 
-
     def _shared_step(self, batch, stage):
         output_dict = self(batch)
 
         classification_loss = 0.0
 
         for target_key in self.target_keys:
-            gt_label = batch["targets"][target_key].long()
 
-            # ===== BASE TASK LOSS (unchanged) =====
-            if target_key == "early_recurrence":
-                base_loss = self.criterion_early_recurrence(output_dict[f"classifier_logits_{target_key}"], gt_label)
-                if self.deep_supervision:
-                    base_loss = base_loss + self.deep_supervision_weight * self.criterion_early_recurrence(output_dict[f"deep_supervision_logits_{target_key}"], gt_label)
-
-            elif target_key == "pathology":
-                mask = gt_label != -1
-                # if nothing valid, skip this task for this batch
-                if mask.sum() == 0:
-                    continue
-                base_loss = self.criterion(output_dict[f"classifier_logits_{target_key}"][mask], gt_label[mask])
-                if self.deep_supervision:
-                    base_loss = base_loss + self.deep_supervision_weight * self.criterion(output_dict[f"deep_supervision_logits_{target_key}"][mask], gt_label[mask])
+            if target_key == "morph_score":
+                gt_label_pre = batch["targets"][f"{target_key}_base"].long()
+                gt_label_post = batch["targets"][f"{target_key}_followup"].long()
+                gt_label = torch.cat([gt_label_pre, gt_label_post], dim=0)
+                classifier_logits = torch.cat(
+                    [
+                        output_dict[f"classifier_logits_{target_key}_base"],
+                        output_dict[f"classifier_logits_{target_key}_followup"],
+                    ],
+                    dim=0,
+                )
             else:
-                base_loss = self.criterion(output_dict[f"classifier_logits_{target_key}"], gt_label)
-                if self.deep_supervision:
-                    base_loss = base_loss + self.deep_supervision_weight * self.criterion(output_dict[f"deep_supervision_logits_{target_key}"], gt_label)
+                gt_label = batch["targets"][target_key].long()
+                classifier_logits = output_dict[f"classifier_logits_{target_key}"]
 
-            # ===== KENDALL WEIGHTING (classification form) =====
-            i = self.task2idx[target_key]
-            s = self.log_vars[i]                 # log(sigma^2)
-            precision = torch.exp(-s)            # 1/sigma^2
-            loss = precision * base_loss + 0.5 * s
+            criterion = getattr(self, f"criterion_{target_key}")
+
+            mask = gt_label != -1
+            if mask.sum() == 0:
+                continue
+
+            logits = classifier_logits[mask]
+            gt_valid = gt_label[mask]
+            base_loss = criterion(logits, gt_valid)
+
+            weight = self.dwa_weights[self.task2idx[target_key], self.current_epoch]
+            loss = weight * base_loss
             classification_loss = classification_loss + loss
 
-            # (optional but useful) log sigma for monitoring
-            self.log(f"{stage}_{target_key}_sigma", torch.exp(0.5 * s).detach(), prog_bar=False)
-
-            # ===== METRICS (unchanged, but use base_loss for per-task loss logging) =====
-            if target_key == "pathology":
-                mask = gt_label != -1
-                logits_valid = output_dict[f"classifier_logits_{target_key}"][mask]
-                gt_valid = gt_label[mask]
-
-                if len(gt_valid) > 0:
-                    probs = torch.softmax(logits_valid, dim=1)
-                    preds = torch.argmax(logits_valid, dim=1)
-
-                    self.log(f"{stage}_{target_key}_acc", self.multi_acc(preds, gt_valid), prog_bar=False)
-                    self.log(f"{stage}_{target_key}_auroc", self.multi_auroc(probs, gt_valid), prog_bar=False)
-                    self.log(f"{stage}_{target_key}_f1", self.multi_f1(preds, gt_valid))
-
-            else:
-                probs = torch.softmax(output_dict[f"classifier_logits_{target_key}"], dim=1)[:, 1]
-                preds = torch.argmax(output_dict[f"classifier_logits_{target_key}"], dim=1)
-
-                self.log(f"{stage}_{target_key}_acc", self.binary_acc(preds, gt_label))
-                self.log(f"{stage}_{target_key}_auroc", self.binary_auroc(probs, gt_label), prog_bar=False)
-                self.log(f"{stage}_{target_key}_f1", self.binary_f1(preds, gt_label))
+            if stage == "train":
+                self.train_loss_sums[target_key] += base_loss.detach().item()
+                self.train_loss_counts[target_key] += 1
 
             self.log(f"{stage}_{target_key}_loss", base_loss, prog_bar=True)
-        
-        pre_seg_loss = self.seg_criterion(output_dict["pre_seg_logits"], batch["base_seg"].to(self.device))
-        post_seg_loss = self.seg_criterion(output_dict["post_seg_logits"], batch["followup_seg"].to(self.device))
-        
-        i = self.task2idx["pre_segmentation"]
-        s_pre = self.log_vars[i]
-        precision_pre = torch.exp(-s_pre)
-        seg_pre_loss_weighted = precision_pre * pre_seg_loss + 0.5 * s_pre
-        self.log(f"{stage}_pre_segmentation_sigma", torch.exp(0.5 * s_pre).detach(), prog_bar=False)
-        
-        i = self.task2idx["post_segmentation"]
-        s_post = self.log_vars[i]
-        precision_post = torch.exp(-s_post)
-        seg_post_loss_weighted = precision_post * post_seg_loss + 0.5 * s_post
-        self.log(f"{stage}_post_segmentation_sigma", torch.exp(0.5 * s_post).detach(), prog_bar=False)
-        
-        seg_loss = seg_pre_loss_weighted + seg_post_loss_weighted
-        self.log(f"{stage}_seg_loss", seg_loss, prog_bar=True)
+            self.log(f"{stage}_{target_key}_weight", weight.detach(), prog_bar=False)
+
+            preds = torch.argmax(logits, dim=1)
+            if logits.shape[1] > 2:
+                probs = torch.softmax(logits, dim=1)
+                self.log(f"{stage}_{target_key}_acc", self.metric_acc[target_key](preds, gt_valid), prog_bar=False)
+                self.log(f"{stage}_{target_key}_auroc", self.metric_auroc[target_key](probs, gt_valid), prog_bar=False)
+                self.log(f"{stage}_{target_key}_f1", self.metric_f1[target_key](preds, gt_valid), prog_bar=False)
+            else:
+                probs = torch.softmax(logits, dim=1)[:, 1]
+                self.log(f"{stage}_{target_key}_acc", self.metric_acc[target_key](preds, gt_valid), prog_bar=False)
+                self.log(f"{stage}_{target_key}_auroc", self.metric_auroc[target_key](probs, gt_valid), prog_bar=False)
+                self.log(f"{stage}_{target_key}_f1", self.metric_f1[target_key](preds, gt_valid), prog_bar=False)
+
+        pre_seg_loss = self.seg_criterion(
+            output_dict["base_seg_logits"], batch["base_seg"].to(self.device)
+        )
+        post_seg_loss = self.seg_criterion(
+            output_dict["followup_seg_logits"], batch["followup_seg"].to(self.device)
+        )
+
+        seg_raw_loss = pre_seg_loss + post_seg_loss
+        seg_w = self.dwa_weights[self.task2idx["segmentation"], self.current_epoch]
+        seg_loss = seg_w * seg_raw_loss
+
+        if stage == "train":
+            self.train_loss_sums["segmentation"] += seg_raw_loss.detach().item()
+            self.train_loss_counts["segmentation"] += 1
+
+        self.log(f"{stage}_base_segmentation_loss", pre_seg_loss, prog_bar=False)
+        self.log(f"{stage}_followup_segmentation_loss", post_seg_loss, prog_bar=False)
+        self.log(f"{stage}_segmentation_weight", seg_w.detach(), prog_bar=False)
 
         total_loss = classification_loss + seg_loss
+        self.log(f"{stage}_seg_loss", seg_loss, prog_bar=True)
         self.log(f"{stage}_loss", total_loss, prog_bar=True)
+        self.log(f"{stage}_classification_loss", classification_loss, prog_bar=True)
         return total_loss
     
+    def on_train_epoch_start(self):
+        self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
+        self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
+
+    def on_train_epoch_end(self):
+        epoch_idx = self.current_epoch
+
+        for task_key in self.dwa_task_keys:
+            if self.train_loss_counts[task_key] > 0:
+                self.avg_cost[epoch_idx, self.task2idx[task_key]] = (
+                    self.train_loss_sums[task_key] / self.train_loss_counts[task_key]
+                )
+            else:
+                if epoch_idx == 0:
+                    self.avg_cost[epoch_idx, self.task2idx[task_key]] = 1.0
+                else:
+                    self.avg_cost[epoch_idx, self.task2idx[task_key]] = \
+                        self.avg_cost[epoch_idx - 1, self.task2idx[task_key]]
+
+        if epoch_idx + 1 < self.max_epochs:
+            if epoch_idx == 0:
+                self.dwa_weights[:, epoch_idx + 1] = 1.0
+            else:
+                w = self.avg_cost[epoch_idx] / (self.avg_cost[epoch_idx - 1] + 1e-8)
+                self.dwa_weights[:, epoch_idx + 1] = (
+                    self.num_tasks * torch.softmax(w / self.dwa_temperature, dim=0)
+                )
+
+        # optional logs
+        for task_key in self.dwa_task_keys:
+            i = self.task2idx[task_key]
+            self.log(f"epoch_{task_key}_avg_loss", self.avg_cost[epoch_idx, i], prog_bar=False)
+            self.log(f"epoch_{task_key}_weight", self.dwa_weights[i, epoch_idx], prog_bar=False)
+
     def training_step(self, batch, batch_idx):
         return self._shared_step(batch, "train")
 
@@ -471,14 +583,7 @@ class AttentionMTLLightning(pl.LightningModule):
                 )
         return [optimizer], [scheduler]
      
-if __name__ == "__main__":
-    model = SegUNet(img_ch=1, base_features=32, output_ch=1)
-    x = torch.randn(2, 1, 64, 64, 64)  # Example input tensor
-    output = model(x)
-    # number of trainable parameters
-    parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"Number of parameters: {parameters}")
-    print(output.shape)  # Should be [2, 1, 64, 64, 64]
+
 
 class AttentionBlock(nn.Module):
     """Attention block with learnable parameters"""
@@ -598,3 +703,23 @@ class AttentionUNet(nn.Module):
         out = self.Conv(d2)
 
         return out
+
+
+def trainable_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+if __name__ == "__main__":
+    base_feature = 32
+    print("number of parameters: ")
+    model = Encoder(img_ch=1, base_features=base_feature)
+    print(f"Encoder: {trainable_parameters(model)}")
+    model = SegDecoder(base_features=base_feature, output_ch=1)
+    print(f"SegDecoder: {trainable_parameters(model)}")
+    model = CrossChannelSpatialAttentionBlock(dim=base_feature)
+    print(f"CrossChannelSpatialAttentionBlock: {trainable_parameters(model)}")
+    model = CrossAttentionClassifier(base_feature=base_feature, demographic_dim=10, num_classes=2, deep_supervision=False)
+    print(f"CrossAttentionClassifier: {trainable_parameters(model)}")
+    model = AttentionSiameseMTLModel(base_feature=base_feature, demographic_dim=10, list_targets=["early_recurrence", "pathology", "survival", "morphology", "morphresponse"], list_num_classes=[2, 2, 2, 3, 3], deep_supervision=True)
+    print(f"AttentionSiameseMTLModel: {trainable_parameters(model)}")
+    model = SiameseBranchClassifier(base_feature=base_feature, demographic_dim=10, num_classes=3)
+    print(f"SiameseBranchClassifier: {trainable_parameters(model)}")

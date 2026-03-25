@@ -1,10 +1,9 @@
 hu_window: [-135, 215]
-resize: [192, 192, 128]
+# resize: [192, 192, 128]
 batch_size: 4
 lr: 0.001
-max_epochs: 100
-base_features: 16
+max_epochs: 1
+base_features: 4
 
-deep_supervision: True
-list_targets: ["early_recurrence", "overall_survival_24m", "pathology"]
-list_num_classes: [2, 2, 3]
+list_targets: ["early_recurrence", "overall_survival_24m", "pathology", "morph_response", "morph_score"]
+list_num_classes: [2, 2, 2, 3, 3]
