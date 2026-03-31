@@ -310,6 +310,8 @@ class FastCustomDataset(Dataset):
         morph_response_map = {"No response": 0, "Optimal response": 1, "Suboptimal response": 2, "Unknown": -1}
         morphscore_map = {"Unknown": -1, 1:0, 2:1, 3:2}
 
+        bevacizumab_map = {"No": 0, "Yes": 1}  # Assuming these are the only values, otherwise use .get() with default
+
         # Map / coerce
         df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
         df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
@@ -322,6 +324,7 @@ class FastCustomDataset(Dataset):
         df["morph_score_base"] = df["morphscorebase_majority"].map(morphscore_map).fillna(-1).astype(int)
         df["morph_score_followup"] = df["morphscorefirstfu_majority"].map(morphscore_map).fillna(-1).astype(int)
         df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
+        df["bevacizumab"] = df["Bevacizumab"].map(bevacizumab_map).fillna(0).astype(int)
 
         osm = pd.to_numeric(df["OSm"], errors="coerce")
         df["overall_survival_24m"] = (osm > 24).fillna(False).astype(int)
@@ -346,6 +349,7 @@ class FastCustomDataset(Dataset):
                     "morph_response": r["morph_response_enc"],
                     "baseline_ttv": r["baseline_ttv"],
                     "delta_ttv_rel": r["delta_ttv_rel"],
+                    "bevacizumab": r["bevacizumab"]
                 }
             )
 
@@ -382,6 +386,7 @@ class FastCustomDataset(Dataset):
                 "morph_score_followup": r["morph_score_followup"],
                 "baseline_ttv": r["baseline_ttv"],
                 "delta_ttv_rel": r["delta_ttv_rel"],
+                "bevacizumab": r["bevacizumab"]
             }
 
         # Threads: good for CSV IO. If you see slowdown on /mnt/l, reduce to 4-8.

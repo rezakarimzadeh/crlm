@@ -51,6 +51,8 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
         
     morph_response_map = {"No response": 0, "Optimal response": 1, "Suboptimal response": 2, "Unknown": -1}
     morphscore_map = {"Unknown": -1, 1:0, 2:1, 3:2}
+    bevacizumab_map = {"No": 0, "Yes": 1}  # Assuming these are the only values, otherwise use .get() with default
+
     # Map / coerce
     df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
     df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
@@ -63,7 +65,7 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
     df["morph_score_base"] = df["morphscorebase_majority"].map(morphscore_map).fillna(-1).astype(int)
     df["morph_score_followup"] = df["morphscorefirstfu_majority"].map(morphscore_map).fillna(-1).astype(int)
     df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
-
+    df["bevacizumab"] = df["Bevacizumab"].map(bevacizumab_map).fillna(0).astype(int)
     train_df = group_matched_indices(df, fold_img_groups['train'])
     val_df = group_matched_indices(df, fold_img_groups['val'])
     test_df = group_matched_indices(df, fold_img_groups['test'])
@@ -172,6 +174,7 @@ class GooglenetDataset(Dataset):
             patient_img_output["followup_diameters"].append(diameter)
 
         patient_img_output["patient_id"] = row["patient_id"]
+        patient_img_output["bevacizumab"] = row["bevacizumab"]  
         patient_img_output["targets"] = {
             "early_recurrence": row["early_recurrence"],
             "overall_survival_24m": row["overall_survival_24m"],
@@ -203,6 +206,7 @@ class GooglenetDataset(Dataset):
             "followup_diameters": cached["followup_diameters"],
             "targets": cached["targets"],
             "demographic_info": cached["demographic_info"],
+            "bevacizumab": cached["bevacizumab"]
         }
         
 
@@ -224,6 +228,7 @@ def custom_collate_fn(batch):
                     "pathology": [], "morph_response": [],
                     "morph_score_base": [], "morph_score_followup": []},
         "demographic_info": [],
+        "bevacizumab": []
     }
 
     for i, item in enumerate(batch):
@@ -258,7 +263,7 @@ def custom_collate_fn(batch):
         collated_batch["targets"]["morph_score_base"].append(item["targets"]["morph_score_base"])
         collated_batch["targets"]["morph_score_followup"].append(item["targets"]["morph_score_followup"])
         collated_batch["demographic_info"].append(item["demographic_info"])
-
+        collated_batch["bevacizumab"].append(item["bevacizumab"])
     # tensors (safe for empty)
     collated_batch["base"]["img"] = _stack_or_empty(collated_batch["base"]["img"])
     collated_batch["followup"]["img"] = _stack_or_empty(collated_batch["followup"]["img"])
@@ -278,6 +283,7 @@ def custom_collate_fn(batch):
     collated_batch["targets"]["morph_score_followup"] = torch.as_tensor(collated_batch["targets"]["morph_score_followup"], dtype=torch.long)
 
     collated_batch["demographic_info"] = torch.as_tensor(collated_batch["demographic_info"], dtype=torch.float32)
+    collated_batch["bevacizumab"] = torch.as_tensor(collated_batch["bevacizumab"], dtype=torch.float32)
 
     return collated_batch
 
@@ -310,9 +316,9 @@ def get_cnn_dataloaders(data_config_dir, model_config_dir, fold_idx):
     print_label_statistics(val_df)
     print("Test label distribution:")
     print_label_statistics(test_df)
-    dataset_train = GooglenetDataset(train_df, preprocessed_data_base_dir, train=True)
-    dataset_val = GooglenetDataset(val_df, preprocessed_data_base_dir, train=False)
-    dataset_test = GooglenetDataset(test_df, preprocessed_data_base_dir, train=False)
+    dataset_train = GooglenetDataset(train_df[:2], preprocessed_data_base_dir, train=True)
+    dataset_val = GooglenetDataset(val_df[:2], preprocessed_data_base_dir, train=False)
+    dataset_test = GooglenetDataset(test_df[:16], preprocessed_data_base_dir, train=False)
 
     train_loader = DataLoader(dataset_train, batch_size=dataloader_config["batch_size"], shuffle=True, num_workers=6, collate_fn=custom_collate_fn)
     val_loader = DataLoader(dataset_val, batch_size=dataloader_config["batch_size"], shuffle=False, num_workers=2, collate_fn=custom_collate_fn)

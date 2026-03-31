@@ -531,6 +531,33 @@ class MorphScoreRPNetLightning(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
+class MorphScoreBaseBranch(nn.Module):
+    def __init__(self, parent_model):
+        super().__init__()
+        self.model = parent_model.model
+        self.sf_conv0 = parent_model.sf_conv0
+        self.sf_conv1 = parent_model.sf_conv1
+        self.sf_conv2 = parent_model.sf_conv2
+        self.pool = parent_model.pool
+        self.score_fc = parent_model.score_fc
+
+    def forward(self, x):
+        r = self.model(x)
+        sf_0, sf_1, sf_2 = r[0], r[1], r[2]  # taps
+
+        g0 = self.sf_conv0(sf_0)
+        g1 = self.sf_conv1(sf_1)
+        g2 = self.sf_conv2(sf_2)
+
+        v0 = self.pool(g0).flatten(1)
+        v1 = self.pool(g1).flatten(1)
+        v2 = self.pool(g2).flatten(1)
+
+        v = torch.cat([v0, v1, v2], dim=1)
+        score_logits = self.score_fc(v)
+
+        return score_logits
+    
 if __name__ == "__main__":
     B, C, D, H, W = 2, 1, 64, 128, 128  # e.g., 4 MRI sequences as channels
     x_pre = torch.randn(B, C, D, H, W)

@@ -182,6 +182,49 @@ class SegDecoder(nn.Module):
         out = self.Conv(d2)
         return out 
 
+class SimpleSegDecoder(nn.Module):
+
+    def __init__(self, base_features=32, output_ch=1):
+        super(SimpleSegDecoder, self).__init__()
+
+        self.base_features = base_features
+
+        self.Up5 = UpConv(base_features * 16, base_features * 8)
+        self.UpConv5 = ConvBlock(base_features * 16, base_features * 8)
+
+        self.Up4 = UpConv(base_features * 8, base_features * 4)
+        self.UpConv4 = ConvBlock(base_features * 8, base_features * 4)
+
+        self.Up3 = UpConv(base_features * 4, base_features * 2)
+        self.UpConv3 = ConvBlock(base_features * 4, base_features * 2)
+
+        self.Up2 = UpConv(base_features * 2, base_features)
+        self.UpConv2 = ConvBlock(base_features * 2, base_features)
+
+        self.Conv = nn.Conv3d(base_features, output_ch, kernel_size=1, stride=1, padding=0)
+
+    def forward(self, e1, e2, e3, e4, e5):
+        d5 = self.Up5(e5)
+
+        # d5_agg = e4 + d5 
+        d5_agg = torch.concatenate([e4, d5], dim=1) # concatenate skip connection with previous layer output
+        d5 = self.UpConv5(d5_agg)
+
+        d4 = self.Up4(d5)
+        d4_agg = torch.concatenate([e3, d4], dim=1)
+        d4 = self.UpConv4(d4_agg)
+
+        d3 = self.Up3(d4)
+        d3_agg = torch.concatenate([e2, d3], dim=1)
+        d3 = self.UpConv3(d3_agg)
+
+        d2 = self.Up2(d3)
+        d2_agg = torch.concatenate([e1, d2], dim=1)
+        d2 = self.UpConv2(d2_agg)
+
+        out = self.Conv(d2)
+        return out
+
 class SegUNet(nn.Module):
     def __init__(self, img_ch=1, base_features=32, output_ch=1):
         super(SegUNet, self).__init__()
@@ -198,10 +241,10 @@ class CrossChannelSpatialAttentionBlock(nn.Module):
         super(CrossChannelSpatialAttentionBlock, self).__init__()
 
         self.channel_attention_pre = ChannelAttention(dim)
-        self.spatial_attention_pre = SpatialAttention()
+        # self.spatial_attention_pre = SpatialAttention()
 
         self.channel_attention_post = ChannelAttention(dim)
-        self.spatial_attention_post = SpatialAttention()
+        # self.spatial_attention_post = SpatialAttention()
 
         # self.conv_block = ConvBlock(in_channels=3*dim, out_channels=dim)
         self.conv_block = nn.Sequential(
@@ -215,10 +258,10 @@ class CrossChannelSpatialAttentionBlock(nn.Module):
     def forward(self, f1, f2):
 
         features_pre = self.channel_attention_pre(features=f1, query=f2)
-        features_pre = self.spatial_attention_pre(features=features_pre, query=f2)
+        # features_pre = self.spatial_attention_pre(features=features_pre, query=f2)
 
         features_post = self.channel_attention_post(features=f2, query=f1)
-        features_post = self.spatial_attention_post(features=features_post, query=f1)
+        # features_post = self.spatial_attention_post(features=features_post, query=f1)
 
         aggregated = torch.cat([features_pre, features_post, features_pre-features_post], dim=1)
         aggregated = self.conv_block(aggregated)
@@ -230,9 +273,9 @@ class ClassifierHead(nn.Module):
     def __init__(self, in_dim, num_classes):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.BatchNorm1d(in_dim),
+            # nn.BatchNorm1d(in_dim),
             nn.Linear(in_dim, in_dim//4),
-            # nn.BatchNorm1d(in_dim//2),
+            nn.BatchNorm1d(in_dim//4),
             # nn.ReLU(inplace=True),
             # nn.Linear(in_dim//2, in_dim//4),
             # nn.BatchNorm1d(in_dim//4),
@@ -327,7 +370,7 @@ class AttentionSiameseMTLModel(nn.Module):
         super(AttentionSiameseMTLModel, self).__init__()
 
         self.encoder = Encoder(img_ch=1, base_features=base_feature)
-        self.seg_decoder = SegDecoder(base_features=base_feature, output_ch=1)
+        self.seg_decoder = SimpleSegDecoder(base_features=base_feature, output_ch=1)
 
         # self.classifiers = nn.ModuleList()
         self.list_targets = list_targets
@@ -364,7 +407,36 @@ def read_yaml_file(path: str) -> dict:
     import yaml
     with open(path, 'r') as f:
         return yaml.safe_load(f)
-    
+
+
+class DiceBCELoss(nn.Module):
+    def __init__(self, smooth=1e-5, bce_weight=0.5, dice_weight=0.5):
+        super().__init__()
+        self.smooth = smooth
+        self.bce = nn.BCEWithLogitsLoss()
+        self.bce_weight = bce_weight
+        self.dice_weight = dice_weight
+
+    def forward(self, logits, targets):
+        # BCE part (uses logits directly)
+        # bce_loss = self.bce(logits, targets)
+
+        # Dice part (needs probabilities)
+        probs = torch.sigmoid(logits)
+
+        probs = probs.view(probs.size(0), -1)
+        targets = targets.view(targets.size(0), -1)
+
+        intersection = (probs * targets).sum(1)
+        dice = (2. * intersection + self.smooth) / (
+            probs.sum(1) + targets.sum(1) + self.smooth
+        )
+
+        dice_loss = 1 - dice.mean()
+
+        # return self.bce_weight * bce_loss + self.dice_weight * dice_loss
+        return dice_loss
+
 
 class AttentionMTLLightning(pl.LightningModule):
     def __init__(self, demographic_dim: int, config_dir: str):
@@ -386,25 +458,25 @@ class AttentionMTLLightning(pl.LightningModule):
         self.target_keys = config["list_targets"]
 
         # DWA tasks
-        self.dwa_task_keys = self.target_keys + ["segmentation"]
-        self.num_tasks = len(self.dwa_task_keys)
-        self.task2idx = {k: i for i, k in enumerate(self.dwa_task_keys)}
+        # self.dwa_task_keys = self.target_keys + ["segmentation"]
+        # self.num_tasks = len(self.dwa_task_keys)
+        # self.task2idx = {k: i for i, k in enumerate(self.dwa_task_keys)}
 
         # [num_tasks, max_epochs]
-        self.register_buffer(
-            "dwa_weights",
-            torch.ones(self.num_tasks, self.max_epochs, dtype=torch.float32)
-        )
+        # self.register_buffer(
+        #     "dwa_weights",
+        #     torch.ones(self.num_tasks, self.max_epochs, dtype=torch.float32)
+        # )
 
-        # epoch-average raw losses, same idea as avg_cost in the example
-        self.register_buffer(
-            "avg_cost",
-            torch.zeros(self.max_epochs, self.num_tasks, dtype=torch.float32)
-        )
+        # # epoch-average raw losses, same idea as avg_cost in the example
+        # self.register_buffer(
+        #     "avg_cost",
+        #     torch.zeros(self.max_epochs, self.num_tasks, dtype=torch.float32)
+        # )
 
-        # running sums for current training epoch
-        self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
-        self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
+        # # running sums for current training epoch
+        # self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
+        # self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
 
         # -------- losses --------
         for tg in self.target_keys:
@@ -426,7 +498,8 @@ class AttentionMTLLightning(pl.LightningModule):
             else:
                 setattr(self, f"criterion_{tg}", nn.CrossEntropyLoss())
 
-        self.seg_criterion = nn.BCEWithLogitsLoss()
+        # self.seg_criterion = nn.BCEWithLogitsLoss()
+        self.seg_criterion = DiceBCELoss()
 
         # -------- metrics --------
         self.metric_acc = nn.ModuleDict()
@@ -483,16 +556,16 @@ class AttentionMTLLightning(pl.LightningModule):
             gt_valid = gt_label[mask]
             base_loss = criterion(logits, gt_valid)
 
-            weight = self.dwa_weights[self.task2idx[target_key], self.current_epoch]
-            loss = weight * base_loss
-            classification_loss = classification_loss + loss
+            # weight = self.dwa_weights[self.task2idx[target_key], self.current_epoch]
+            # loss = weight * base_loss
+            classification_loss = classification_loss + base_loss
 
-            if stage == "train":
-                self.train_loss_sums[target_key] += base_loss.detach().item()
-                self.train_loss_counts[target_key] += 1
+            # if stage == "train":
+            #     self.train_loss_sums[target_key] += base_loss.detach().item()
+            #     self.train_loss_counts[target_key] += 1
 
             self.log(f"{stage}_{target_key}_loss", base_loss, prog_bar=True)
-            self.log(f"{stage}_{target_key}_weight", weight.detach(), prog_bar=False)
+            # self.log(f"{stage}_{target_key}_weight", weight.detach(), prog_bar=False)
 
             preds = torch.argmax(logits, dim=1)
             if logits.shape[1] > 2:
@@ -514,56 +587,56 @@ class AttentionMTLLightning(pl.LightningModule):
         )
 
         seg_raw_loss = pre_seg_loss + post_seg_loss
-        seg_w = self.dwa_weights[self.task2idx["segmentation"], self.current_epoch]
-        seg_loss = seg_w * seg_raw_loss
+        # seg_w = self.dwa_weights[self.task2idx["segmentation"], self.current_epoch]
+        # seg_loss = seg_w * seg_raw_loss
 
-        if stage == "train":
-            self.train_loss_sums["segmentation"] += seg_raw_loss.detach().item()
-            self.train_loss_counts["segmentation"] += 1
+        # if stage == "train":
+        #     self.train_loss_sums["segmentation"] += seg_raw_loss.detach().item()
+        #     self.train_loss_counts["segmentation"] += 1
 
         self.log(f"{stage}_base_segmentation_loss", pre_seg_loss, prog_bar=False)
         self.log(f"{stage}_followup_segmentation_loss", post_seg_loss, prog_bar=False)
-        self.log(f"{stage}_segmentation_weight", seg_w.detach(), prog_bar=False)
+        # self.log(f"{stage}_segmentation_weight", seg_w.detach(), prog_bar=False)
 
-        total_loss = classification_loss + seg_loss
-        self.log(f"{stage}_seg_loss", seg_loss, prog_bar=True)
+        total_loss = classification_loss + 2*seg_raw_loss
+        # self.log(f"{stage}_seg_loss", seg_raw_loss, prog_bar=True)
         self.log(f"{stage}_loss", total_loss, prog_bar=True)
         self.log(f"{stage}_classification_loss", classification_loss, prog_bar=True)
         return total_loss
     
-    def on_train_epoch_start(self):
-        self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
-        self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
+    # def on_train_epoch_start(self):
+    #     self.train_loss_sums = {k: 0.0 for k in self.dwa_task_keys}
+    #     self.train_loss_counts = {k: 0 for k in self.dwa_task_keys}
 
-    def on_train_epoch_end(self):
-        epoch_idx = self.current_epoch
+    # def on_train_epoch_end(self):
+    #     epoch_idx = self.current_epoch
 
-        for task_key in self.dwa_task_keys:
-            if self.train_loss_counts[task_key] > 0:
-                self.avg_cost[epoch_idx, self.task2idx[task_key]] = (
-                    self.train_loss_sums[task_key] / self.train_loss_counts[task_key]
-                )
-            else:
-                if epoch_idx == 0:
-                    self.avg_cost[epoch_idx, self.task2idx[task_key]] = 1.0
-                else:
-                    self.avg_cost[epoch_idx, self.task2idx[task_key]] = \
-                        self.avg_cost[epoch_idx - 1, self.task2idx[task_key]]
+    #     for task_key in self.dwa_task_keys:
+    #         if self.train_loss_counts[task_key] > 0:
+    #             self.avg_cost[epoch_idx, self.task2idx[task_key]] = (
+    #                 self.train_loss_sums[task_key] / self.train_loss_counts[task_key]
+    #             )
+    #         else:
+    #             if epoch_idx == 0:
+    #                 self.avg_cost[epoch_idx, self.task2idx[task_key]] = 1.0
+    #             else:
+    #                 self.avg_cost[epoch_idx, self.task2idx[task_key]] = \
+    #                     self.avg_cost[epoch_idx - 1, self.task2idx[task_key]]
 
-        if epoch_idx + 1 < self.max_epochs:
-            if epoch_idx == 0:
-                self.dwa_weights[:, epoch_idx + 1] = 1.0
-            else:
-                w = self.avg_cost[epoch_idx] / (self.avg_cost[epoch_idx - 1] + 1e-8)
-                self.dwa_weights[:, epoch_idx + 1] = (
-                    self.num_tasks * torch.softmax(w / self.dwa_temperature, dim=0)
-                )
+    #     if epoch_idx + 1 < self.max_epochs:
+    #         if epoch_idx == 0:
+    #             self.dwa_weights[:, epoch_idx + 1] = 1.0
+    #         else:
+    #             w = self.avg_cost[epoch_idx] / (self.avg_cost[epoch_idx - 1] + 1e-8)
+    #             self.dwa_weights[:, epoch_idx + 1] = (
+    #                 self.num_tasks * torch.softmax(w / self.dwa_temperature, dim=0)
+    #             )
 
-        # optional logs
-        for task_key in self.dwa_task_keys:
-            i = self.task2idx[task_key]
-            self.log(f"epoch_{task_key}_avg_loss", self.avg_cost[epoch_idx, i], prog_bar=False)
-            self.log(f"epoch_{task_key}_weight", self.dwa_weights[i, epoch_idx], prog_bar=False)
+    #     # optional logs
+    #     for task_key in self.dwa_task_keys:
+    #         i = self.task2idx[task_key]
+    #         self.log(f"epoch_{task_key}_avg_loss", self.avg_cost[epoch_idx, i], prog_bar=False)
+    #         self.log(f"epoch_{task_key}_weight", self.dwa_weights[i, epoch_idx], prog_bar=False)
 
     def training_step(self, batch, batch_idx):
         return self._shared_step(batch, "train")

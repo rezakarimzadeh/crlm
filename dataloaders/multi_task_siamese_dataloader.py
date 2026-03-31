@@ -89,6 +89,8 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
     
     morph_response_map = {"No response": 0, "Optimal response": 1, "Suboptimal response": 2, "Unknown": -1}
     morphscore_map = {"Unknown": -1, 1:0, 2:1, 3:2}
+    bevacizumab_map = {"No": 0, "Yes": 1}  # Assuming these are the only values, otherwise use .get() with default
+    
     # Map / coerce
     df["mutstat_enc"] = df["mutstat"].map(mut_map).fillna(-1).astype(int)
     df["sex_enc"] = df["sex"].map(sex_map).fillna(-1).astype(int)
@@ -101,7 +103,7 @@ def match_excel_splits_with_imgroups(df, fold_img_groups):
     df["morph_score_base"] = df["morphscorebase_majority"].map(morphscore_map).fillna(-1).astype(int)
     df["morph_score_followup"] = df["morphscorefirstfu_majority"].map(morphscore_map).fillna(-1).astype(int)
     df["early_recurrence"] = pd.to_numeric(df["ER (1 = yes, 0 = no)"], errors="coerce").fillna(0).astype(int)
-
+    df["bevacizumab"] = df["Bevacizumab"].map(bevacizumab_map).fillna(0).astype(int)
     
     train_df = group_matched_indices(df, fold_img_groups['train'])
     val_df = group_matched_indices(df, fold_img_groups['val'])
@@ -169,6 +171,7 @@ class VolumesDataset(Dataset):
     def _get_available_idxs(self, idx):
         sample = self.df.iloc[idx]
         case = {
+                "patient_ids": sample['patient_id'],
                 # "base_img": os.path.join(self.preprocessed_data_base_dir,"10_images_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0_0000.nii.gz"),
                 # "base_seg": os.path.join(self.preprocessed_data_base_dir,"10_segmentations_no_registration_resampled113_resized_192_192_128", f"{sample['patient_id']}_0.nii.gz"),
 
@@ -181,6 +184,7 @@ class VolumesDataset(Dataset):
                 "followup_img": os.path.join(self.preprocessed_data_base_dir,"11_images_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_1_0000.nii.gz"),
                 "followup_seg": os.path.join(self.preprocessed_data_base_dir,"11_segmentations_no_registration_resampled226_resized_96_96_64", f"{sample['patient_id']}_1.nii.gz"),
 
+                "bevacizumab": torch.tensor(sample['bevacizumab']),
                 "demographic_info": torch.tensor(sample['demographic_info']),  # Example demographic info, adjust as needed
                 "targets": {"early_recurrence": torch.tensor(sample['early_recurrence']),
                             "overall_survival_24m": torch.tensor(sample['overall_survival_24m']),

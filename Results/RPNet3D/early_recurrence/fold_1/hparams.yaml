@@ -1,0 +1,5 @@
+config_dir: ./configs/rpnet3d_config.yaml
+target_key: early_recurrence
+w_cls: 1.0
+w_seg_post: 1.0
+w_seg_pre: 1.0

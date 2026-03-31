@@ -174,7 +174,10 @@ def collate_fn(batch):
             "pad_mask": follow_pad_mask,           # [B, Tfu], True=PAD
             "lesion_labels": follow_lab_pad,       # [B, Tfu], -1=PAD
         },
-
+        'bevacizumab': torch.tensor(
+            [int(item["bevacizumab"]) for item in batch],
+            dtype=torch.long
+        ),
         "demographic_info": demographic_info,      # [B, D]
         "targets": {
             "early_recurrence": early_recurrence,      # [B]

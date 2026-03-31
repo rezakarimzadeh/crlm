@@ -1,0 +1,18 @@
+{
+    "accuracy_mean": 0.5618390749612175,
+    "precision_mean": 0.31348652330229343,
+    "recall_mean": 0.5478956228956229,
+    "specificity_mean": 0.5543209333039842,
+    "f1_score_mean": 0.38460091213279507,
+    "roc_auc_mean": 0.5603332820887299,
+    "base_dice_mean": 0.8034555321841337,
+    "followup_dice_mean": 0.7645719827833186,
+    "accuracy_std": 0.1297886731741355,
+    "precision_std": 0.19533025940461238,
+    "recall_std": 0.33739621901679856,
+    "specificity_std": 0.3060689201713366,
+    "f1_score_std": 0.2191680101496406,
+    "roc_auc_std": 0.04215224006251345,
+    "base_dice_std": 0.0035513596020965636,
+    "followup_dice_std": 0.019323414332809864
+}
